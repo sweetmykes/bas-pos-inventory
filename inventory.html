@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-container">
+                    <img src="C:\Users\Mico\OneDrive\Desktop\PROJECTS\POS\pics\logo.png" alt="Ksweets Logo" class="logo-img" onerror="this.style.display='none'">
+                    <div class="logo-text">Inventory</div>
+                </div>
+                <div class="nav">
+                    <a href="index.html" class="btn btn-primary">
+                        POS
+                    </a>
+                    <a href="purchase-history.html" class="btn btn-outline">
+                        Purchase History
+                    </a>
+                    <button class="btn btn-outline" onclick="openShopSettingsModal()">
+                        ⚙️
+                    </button>
+                    <button class="btn btn-danger" onclick="eraseAllData()" title="Erase All Data">
+                        🗑️
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+<!-- Categories Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Categories</h2>
+                <button class="btn btn-primary" onclick="openCategoryModal()">
+                    + Add Category
+                </button>
+            </div>
+            
+            <div class="categories-grid" id="categoriesGrid">
+            </div>
+        </div>
+
+        <!-- Products Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Products</h2>
+                <button class="btn btn-primary" onclick="openProductModal()">
+                    + Add Product
+                </button>
+            </div>
+            
+            <div class="inventory-table" style="margin-top: 20px;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Total Stock</th>  
+                            <th>Size Stocks</th>  
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+<!-- Category Modal -->
+<div class="modal" id="categoryModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title" id="categoryModalTitle">Add Category</div>
+            <button class="close-btn" onclick="closeCategoryModal()">&times;</button>
+        </div>
+        
+        <form onsubmit="handleCategorySubmit(event)">
+            <div class="form-group">
+                <label class="form-label">Category Name</label>
+                <input type="text" class="form-input" id="categoryName" required placeholder="Enter category name">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Icon</label>
+                <div class="icons-grid" id="categoryIcons">
+                    <!-- Icons will be loaded here -->
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Color</label>
+                <div class="colors-grid" id="colorsGrid">
+                </div>
+            </div>
+
+<!-- Size Options Section -->
+            <div id="sizeOptionsSection" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Size Options (for Drinks)</label>
+                    
+                    <div class="size-input-group">
+                        <input type="text" class="form-input" id="size1" placeholder="Size 1 (e.g., Small)" style="margin-bottom: 8px;">
+                    </div>
+                    
+                    <div class="size-input-group">
+                        <input type="text" class="form-input" id="size2" placeholder="Size 2 (e.g., Medium)" style="margin-bottom: 8px;">
+                    </div>
+                    
+                    <div class="size-input-group">
+                        <input type="text" class="form-input" id="size3" placeholder="Size 3 (e.g., Large)" style="margin-bottom: 8px;">
+                    </div>
+                    
+                    <div id="additionalSizesContainer"></div>
+                    
+                    <button type="button" class="btn btn-outline" onclick="addSizeField()" style="margin-top: 8px; font-size: 12px; padding: 6px 12px;">
+                        + Add Another Size
+                    </button>
+                    
+                    <small style="color: var(--secondary); font-size: 12px;">
+                        Size 1 is required. Add more sizes as needed.
+                    </small>
+                </div>
+            </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                    <button type="button" class="btn btn-outline" onclick="closeCategoryModal()" style="padding: 10px 20px;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">Save Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+ <!-- Product Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="productModalTitle">Add Product</div>
+                <button class="close-btn" onclick="closeProductModal()">&times;</button>
+            </div>
+            
+            <form onsubmit="handleProductSubmit(event)">
+                <div class="form-group">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" class="form-input" id="productName" required placeholder="Enter product name">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <input type="hidden" id="productCategory" required>
+                    
+                    <div class="category-dropdown" style="width: 100%;">
+                        <button type="button" class="dropdown-btn" id="productCategoryBtn" onclick="toggleProductDropdown()" style="width: 100%; justify-content: space-between;">
+                            <span id="selectedCategoryDisplay">Select Category</span>
+                        </button>
+                        
+                        <div id="productCategoryList" class="dropdown-content" style="width: 100%;">
+                            </div>
+                    </div>
+                </div>
+                <div class="form-group" id="mainPriceFieldGroup">
+                    <label class="form-label">Price</label>
+                    <input type="number" class="form-input" id="productPrice" step="0.01" min="0" placeholder="0.00">
+                </div>
+                
+                <div class="form-group" id="mainStockFieldGroup">
+                    <label class="form-label">Stock</label>
+                    <input type="number" class="form-input" id="productStock" min="0" placeholder="0">
+                </div>
+                <div class="form-group" id="sizeFieldGroup" style="display: none;">
+                    <label class="form-label">Stock & Price per Size</label>
+                    <div id="sizeStocksContainer">
+                    </div>
+                    <small style="color: var(--secondary); font-size: 12px; display: block; margin-top: 8px;">
+                        Enter stock quantity and price for each size
+                    </small>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeProductModal()">&nbsp;Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Shop Settings Modal -->
+    <div class="modal" id="shopSettingsModal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <div class="modal-title">Shop Settings</div>
+            <button class="close-btn" onclick="closeShopSettingsModal()">&times;</button>
+        </div>
+        
+        <form onsubmit="handleShopSettings(event)">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div class="settings-logo-wrapper">
+                    <img id="settingsLogoPreview" src="pics/logo.png" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjY2NjIiBzdHJva2Utd2lkdGg9IjIiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIi8+PHBhdGggZD0iTTEyIDh2OG00LTRoLTgiLz48L3N2Zz4='" alt="Shop Logo">
+                    <div class="logo-edit-overlay" onclick="document.getElementById('logoInput').click()">📷</div>
+                </div>
+                <input type="file" id="logoInput" accept="image/*" hidden onchange="previewLogo(this)">
+                <small style="color: var(--secondary); display: block; margin-top: 5px;">Click icon to change logo</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Shop Name</label>
+                <input type="text" class="form-input" id="shopName" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Address</label>
+                <textarea class="form-input" id="shopAddress" rows="2"></textarea>
+            </div>
+
+            <div style="border-top: 1px dashed #ddd; padding-top: 15px; margin-top: 15px;">
+                <label class="form-label" style="color: var(--primary);">Admin Credentials</label>
+                <div class="form-group input-with-edit">
+                    <div style="flex: 1;">
+                        <label style="font-size: 12px; color: #666;"><b>Email</b><br><i>Leave empty if you want to keep the default credentials</i></label>
+                        <input type="text" class="form-input" id="adminEmail" readonly style="background: #f9f9f9;">
+                    </div>
+                    <button type="button" class="btn-edit-field" onclick="enableField('adminEmail')" title="Edit Email">✏️</button>
+                </div>
+                <div class="form-group input-with-edit">
+                    <div style="flex: 1;">
+                        <label style="font-size: 12px; color: #666;"><b>Password</b><br><i>Leave empty if you want to keep the default credentials</i></label>
+                        <input type="password" class="form-input" id="adminPass" readonly style="background: #f9f9f9;">
+                    </div>
+                    <button type="button" class="btn-edit-field" onclick="enableField('adminPass')" title="Edit Password">✏️</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <label class="form-label" style="margin-bottom: 0;">Receipt Footer</label>
+                    <button type="button" onclick="openFooterHelpModal()" style="background: none; border: none; cursor: pointer; font-size: 18px;" title="Get Ideas">
+                        💡
+                    </button>
+                </div>
+                <textarea class="form-input" id="receiptFooter" rows="2" placeholder="Click the bulb emoticon for clues"></textarea>
+            </div>
+            
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeShopSettingsModal()">&nbsp;Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="modal" id="reLoginModal" style="z-index: 20000;"> <div class="modal-content" style="max-width: 350px;">
+            <div class="modal-header">
+                <div class="modal-title">🔒 Security Check</div>
+                <button class="close-btn" onclick="closeReLoginModal()">&times;</button>
+            </div>
+            <form onsubmit="handleReLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">Enter Admin Email</label>
+                    <input type="text" class="form-input" id="securityEmail" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Enter Password</label>
+                    <input type="password" class="form-input" id="securityPass" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeReLoginModal()">&nbsp;Cancel</button>
+                    <button type="submit" class="btn btn-primary">&nbsp;&nbsp;Verify</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="stockEditModal">
+        <div class="modal-content" style="max-width: 350px;">
+            <div class="modal-header">
+                <div class="modal-title">Update Stock</div>
+                <button class="close-btn" onclick="closeStockEditModal()">&times;</button>
+            </div>
+            <form onsubmit="handleStockUpdate(event)">
+                <div class="form-group">
+                    <label class="form-label" id="stockEditLabel">Current Stock</label>
+                    <div style="font-size: 24px; font-weight: bold; margin-bottom: 10px; color: var(--primary);" id="currentStockDisplay">0</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">New Stock Quantity</label>
+                    <input type="number" class="form-input" id="newStockValue" min="0" required placeholder="Enter new amount">
+                    <small style="color: #666;">Enter the actual physical count.</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeStockEditModal()">&nbsp;Cancel</button>
+                    <button type="submit" class="btn btn-success">Update Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="modal" id="errorAlertModal" style="z-index: 30000;">
+        <div class="modal-content error-theme" style="max-width: 400px; text-align: center;">
+            <div style="margin-bottom: 15px;">
+                <div style="font-size: 40px; margin-bottom: 15px;">❌</div>
+                <h3 id="errorAlertTitle" class="error-title">Error</h3>
+                <p id="errorAlertMessage" class="error-message">Something went wrong.</p>
+            </div>
+            <button class="btn btn-danger" onclick="closeErrorAlert()" style="width: 100%; justify-content: center;">OK</button>
+        </div>
+    </div>
+    <div class="modal" id="customConfirmModal" style="z-index: 30000;">
+        <div class="modal-content error-theme" style="max-width: 400px; text-align: center;">
+            <div style="margin-bottom: 15px;">
+                <div style="font-size: 40px; margin-bottom: 15px;">⚠️</div>
+                <h3 id="confirmTitle" style="font-size: 22px; font-weight: bold; margin-bottom: 10px; color: var(--dark);">Are you sure?</h3>
+                <p id="confirmMessage" style="color: var(--secondary); margin-bottom: 24px;">This action cannot be undone.</p>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button class="btn btn-outline" onclick="closeConfirmModal()" style="min-width: 100px;">Cancel</button>
+                <button class="btn btn-danger" id="confirmActionBtn" style="min-width: 100px;">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="footerHelpModal" style="z-index: 40000;">
+        <div class="modal-content pop-up-anim" style="max-width: 400px; text-align: center; border-top: 5px solid #9333ea;">
+            <div style="margin-bottom: 15px;">
+                <div style="font-size: 40px; margin-bottom: 15px;">💡</div>
+                <h3 style="font-size: 22px; font-weight: bold; margin-bottom: 10px; color: #6b21a8;">Footer Ideas</h3>
+                <p style="color: #4b5563; margin-bottom: 20px; line-height: 1.5;">
+                    Use this space to engage your customers! Here are some ideas:
+                </p>
+                <div style="background: #f3e8ff; padding: 15px; border-radius: 8px; text-align: left; font-size: 13px; color: #6b21a8; margin-bottom: 20px;">
+                    <div style="text-align: center; line-height: 1.8;">
+                        ✨ "Announcements & Promos"<br>
+                        📖 "Daily Bible Verses"<br>
+                        ⚠️ "Policy & Reminders"<br>
+                        📢 "Social Media Links"
+                    </div>
+                </div>
+            </div>
+            <button class="btn" onclick="closeFooterHelpModal()" style="width: 100%; justify-content: center; background-color: #9333ea; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer;">Got it!</button>
+        </div>
+    </div>
+
+      <script src="data.js"></script>
+       <script src="inventory.js"></script>
+</body>
+</html>
