@@ -129,10 +129,9 @@ function loadSalesHistory(salesData) {
             const saleDate = new Date(sale.timestamp);
             const timeString = saleDate.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
             
-            // FIX: Gawing comma-separated list para mas compact at hindi mag-break ng column width
+            // FIX: Use <span> with display: block and nowrap for vertical stacking of items within one column
             const itemsString = sale.items.map(item => {
                 const product = products.find(p => p.id === item.productId);
-                // Using display: block span to force vertical stacking within the Items column
                 return product ? `<span style="display: block; white-space: normal;">${item.quantity}x ${product.name} (${item.size || 'N/A'})</span>` : 'Unknown Product';
             }).join('');
             

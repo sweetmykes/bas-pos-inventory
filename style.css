@@ -812,8 +812,8 @@ select.form-input {
 .table td {
     padding: 12px 15px;
     border-bottom: 1px solid #e5e7eb;
-    /* Tiyakin na hindi magra-wrap ang data sa desktop/tablet */
-    white-space: normal; /* FINAL FIX: Allow wrapping for better alignment, especially in Inventory */
+    /* FINAL FIX: Allow wrapping for better alignment, especially in Inventory */
+    white-space: normal; 
 }
 
 .table tr:hover {
@@ -1217,9 +1217,8 @@ select.form-input {
     border-collapse: collapse;
     margin-top: 16px;
     /* FIX: Bigyan ng minimum width para mag-scroll at hindi mag-collapse */
-    min-width: 700px; 
+    min-width: 750px; /* Dagdagan ng 50px para magkasya ang lahat */
     margin-top: 0;
-    /* TANGGALIN: white-space: nowrap; dito */
 }
 
 .history-items-table th,
@@ -1227,17 +1226,33 @@ select.form-input {
     padding: 8px 12px;
     text-align: left;
     border-bottom: 1px solid var(--border);
-    /* FINAL FIX: Siguraduhin na ang text ay nagra-wrap (normal) sa loob ng cell */
+    /* FINAL FIX: Allow wrapping for better alignment in Items/Time (Default is now normal) */
     white-space: normal; 
+    vertical-align: top;
 }
-/* FIX: Compact Payment and Actions column spacing */
-.history-items-table th:nth-child(4), .history-items-table td:nth-child(4) { /* Payment */
-    min-width: 100px; 
-    /* FINAL FIX: Gawing nowrap ang payment badge lang, pero ang cell ay normal wrap. */
-    white-space: nowrap; 
+/* FIX: Specific Column Widths and White Space Control */
+.history-items-table th:nth-child(1), 
+.history-items-table td:nth-child(1) { /* Time */
+    min-width: 100px;
+    white-space: nowrap; /* Prevent time from wrapping */
+}
+.history-items-table th:nth-child(2), 
+.history-items-table td:nth-child(2) { /* Items */
+    min-width: 250px;
+}
+.history-items-table th:nth-child(3), 
+.history-items-table td:nth-child(3) { /* Total */
+    min-width: 100px;
+    white-space: nowrap;
+}
+.history-items-table th:nth-child(4), 
+.history-items-table td:nth-child(4) { /* Payment */
+    min-width: 120px;
+    white-space: nowrap; /* Payment badge and text should not wrap */
 }
 .history-items-table td:nth-child(5) { /* Actions Column */
-    white-space: nowrap; /* Para magkasama ang buttons at hindi mag-wrap */
+    min-width: 180px; 
+    white-space: nowrap; /* Keep buttons together */
 }
 
 .history-items-table th {
@@ -2248,7 +2263,7 @@ select.form-input {
     /* FIX: Ensure Payment column data doesn't wrap unnecessarily */
     .history-items-table th:nth-child(4), 
     .history-items-table td:nth-child(4) { 
-        min-width: 110px; /* Reduced width */
+        min-width: 110px; 
         white-space: nowrap; 
     }
 
