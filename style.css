@@ -813,7 +813,7 @@ select.form-input {
     padding: 12px 15px;
     border-bottom: 1px solid #e5e7eb;
     /* Tiyakin na hindi magra-wrap ang data sa desktop/tablet */
-    white-space: nowrap; 
+    white-space: normal; /* FINAL FIX: Allow wrapping for better alignment, especially in Inventory */
 }
 
 .table tr:hover {
@@ -1219,7 +1219,7 @@ select.form-input {
     /* FIX: Bigyan ng minimum width para mag-scroll at hindi mag-collapse */
     min-width: 700px; 
     margin-top: 0;
-    white-space: nowrap;
+    /* TANGGALIN: white-space: nowrap; dito */
 }
 
 .history-items-table th,
@@ -1227,14 +1227,17 @@ select.form-input {
     padding: 8px 12px;
     text-align: left;
     border-bottom: 1px solid var(--border);
-    white-space: nowrap;
+    /* FINAL FIX: Siguraduhin na ang text ay nagra-wrap (normal) sa loob ng cell */
+    white-space: normal; 
 }
 /* FIX: Compact Payment and Actions column spacing */
 .history-items-table th:nth-child(4), .history-items-table td:nth-child(4) { /* Payment */
-    min-width: 100px; /* Reduced width */
+    min-width: 100px; 
+    /* FINAL FIX: Gawing nowrap ang payment badge lang, pero ang cell ay normal wrap. */
+    white-space: nowrap; 
 }
-.history-items-table th:last-child, .history-items-table td:last-child { /* Actions */
-    min-width: 140px; /* Reduced width to fit buttons */
+.history-items-table td:nth-child(5) { /* Actions Column */
+    white-space: nowrap; /* Para magkasama ang buttons at hindi mag-wrap */
 }
 
 .history-items-table th {
@@ -2225,13 +2228,28 @@ select.form-input {
         /* FIX: Bigyan ng minimum width para mag-scroll at hindi mag-collapse */
         min-width: 700px; 
         margin-top: 0;
-        white-space: nowrap;
     }
     
     .table th, .table td {
         /* Hayaan ang laman na mag-adjust, tanggalin ang fixed min-width */
         padding: 10px 12px; 
-        white-space: nowrap;
+        white-space: normal; /* FINAL FIX: Allow wrapping for better alignment in Inventory */
+    }
+
+    .history-items-table th,
+    .history-items-table td {
+        white-space: normal;
+    }
+    /* FIX: Ensure Actions column is wide enough and content won't wrap */
+    .history-items-table td:nth-child(5) { 
+        min-width: 160px; /* Give ample space for Receipt and Void buttons */
+        white-space: nowrap; 
+    }
+    /* FIX: Ensure Payment column data doesn't wrap unnecessarily */
+    .history-items-table th:nth-child(4), 
+    .history-items-table td:nth-child(4) { 
+        min-width: 110px; /* Reduced width */
+        white-space: nowrap; 
     }
 
     .history-items-table .btn-sm {

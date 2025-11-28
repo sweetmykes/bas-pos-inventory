@@ -129,15 +129,16 @@ function loadSalesHistory(salesData) {
             const saleDate = new Date(sale.timestamp);
             const timeString = saleDate.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
             
+            // FIX: Gawing comma-separated list para mas compact at hindi mag-break ng column width
             const itemsString = sale.items.map(item => {
                 const product = products.find(p => p.id === item.productId);
-                // FIX: Use <br> tags to separate items within the cell, but only in this cell.
-                return product ? `${item.quantity}x ${product.name} (${item.size || 'N/A'})` : 'Unknown Product';
-            }).join('<br>'); 
+                // Using display: block span to force vertical stacking within the Items column
+                return product ? `<span style="display: block; white-space: normal;">${item.quantity}x ${product.name} (${item.size || 'N/A'})</span>` : 'Unknown Product';
+            }).join('');
             
-            // FIX: Tamang 5 columns (TDs) na may tamang data alignment.
+            // FIX: Tamang 5 columns (TDs) ang output para mag-align sa header.
             row.innerHTML = `
-                <td>${timeString}</td> 
+                <td><span style="display: block; white-space: nowrap;">${timeString}</span></td> 
                 <td>${itemsString}</td> 
                 <td>₱${sale.total.toFixed(2)}</td>
                 <td><span class="payment-method-badge payment-${sale.paymentMethod}">${sale.paymentMethod.toUpperCase()}</span></td>
