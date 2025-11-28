@@ -131,6 +131,7 @@ function loadSalesHistory(salesData) {
             
             const itemsString = sale.items.map(item => {
                 const product = products.find(p => p.id === item.productId);
+                // FIX: Added size to item display
                 return product ? `${item.quantity}x ${product.name} (${item.size || 'No Size'})` : 'Unknown Product';
             }).join('<br>'); // Gumamit ng <br> para magkahiwalay ang items sa loob ng cell
             

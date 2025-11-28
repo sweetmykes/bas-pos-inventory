@@ -961,8 +961,6 @@ select.form-input {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
-    flex-shrink: 0;
 }
 
 .remove-size-btn:hover {
@@ -1206,20 +1204,21 @@ select.form-input {
 .history-details {
     background: white;
     border-radius: var(--radius);
-    padding: 16px;
     box-shadow: var(--shadow);
-    /* Dito natin ilalagay ang scrolling sa mobile */
+    /* FIX: Gawing scrollable ang container ng table */
     overflow-x: auto; 
     display: block;
     width: 100%;
+    padding: 16px 0; /* Alisin ang padding sa gilid para mas makita ang table */
 }
 
 .history-items-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 16px;
-    /* FIX: Hayaan ang table na mag-adjust sa laman */
-    min-width: 600px; /* Para may minimum width siya at mag-scroll sa mobile */
+    /* FIX: Bigyan ng minimum width para mag-scroll at hindi mag-collapse */
+    min-width: 700px; 
+    margin-top: 0;
     white-space: nowrap;
 }
 
@@ -1229,6 +1228,13 @@ select.form-input {
     text-align: left;
     border-bottom: 1px solid var(--border);
     white-space: nowrap;
+}
+/* FIX: Compact Payment and Actions column spacing */
+.history-items-table th:nth-child(4), .history-items-table td:nth-child(4) { /* Payment */
+    min-width: 100px; /* Reduced width */
+}
+.history-items-table th:last-child, .history-items-table td:last-child { /* Actions */
+    min-width: 140px; /* Reduced width to fit buttons */
 }
 
 .history-items-table th {
@@ -2217,7 +2223,7 @@ select.form-input {
     
     .history-items-table {
         /* FIX: Bigyan ng minimum width para mag-scroll at hindi mag-collapse */
-        min-width: 600px; 
+        min-width: 700px; 
         margin-top: 0;
         white-space: nowrap;
     }
@@ -2281,7 +2287,7 @@ select.form-input {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .report-controls {
         width: 100%;
         justify-content: flex-start;
