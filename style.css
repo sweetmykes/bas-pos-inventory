@@ -783,16 +783,18 @@ select.form-input {
     background: white;
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    overflow: hidden;
+    /* FIX: Gawing scrollable ang container ng table */
+    overflow-x: auto; 
     margin-top: 20px;
 }
 
 .table {
+    /* FIX: Hayaan ang table na mag-adjust sa content */
     width: 100%;
     border-collapse: collapse;
     background: white;
     border-radius: 8px;
-    overflow: hidden;
+    /* TANGGALIN: overflow: hidden; */
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
@@ -803,11 +805,15 @@ select.form-input {
     font-weight: 600;
     color: #374151;
     border-bottom: 1px solid #e5e7eb;
+    /* Tiyakin na hindi magra-wrap ang headers sa desktop/tablet */
+    white-space: nowrap; 
 }
 
 .table td {
     padding: 12px 15px;
     border-bottom: 1px solid #e5e7eb;
+    /* Tiyakin na hindi magra-wrap ang data sa desktop/tablet */
+    white-space: nowrap; 
 }
 
 .table tr:hover {
@@ -1202,12 +1208,19 @@ select.form-input {
     border-radius: var(--radius);
     padding: 16px;
     box-shadow: var(--shadow);
+    /* Dito natin ilalagay ang scrolling sa mobile */
+    overflow-x: auto; 
+    display: block;
+    width: 100%;
 }
 
 .history-items-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 16px;
+    /* FIX: Hayaan ang table na mag-adjust sa laman */
+    min-width: 600px; /* Para may minimum width siya at mag-scroll sa mobile */
+    white-space: nowrap;
 }
 
 .history-items-table th,
@@ -1215,6 +1228,7 @@ select.form-input {
     padding: 8px 12px;
     text-align: left;
     border-bottom: 1px solid var(--border);
+    white-space: nowrap;
 }
 
 .history-items-table th {
@@ -1857,6 +1871,7 @@ select.form-input {
     justify-content: space-between;
     padding: 2px 0;
     border-bottom: 1px dashed #eee;
+    white-space: nowrap;
 }
 
 .size-stock-row:last-child {
@@ -2185,32 +2200,34 @@ select.form-input {
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     }
     
-    .table {
-        /* FIX: Make table scrollable horizontally for Inventory/History */
-        display: block;
+    /* FIX: Inventory Table Container Scrolling */
+    .inventory-table {
         overflow-x: auto;
+        display: block;
+        width: 100%;
+    }
+    
+    /* FIX: History Table Container Scrolling */
+    .history-details {
+        overflow-x: auto;
+        display: block;
+        width: 100%;
+        padding: 16px 0; /* Alisin ang padding sa gilid para mas makita ang table */
+    }
+    
+    .history-items-table {
+        /* FIX: Bigyan ng minimum width para mag-scroll at hindi mag-collapse */
+        min-width: 600px; 
+        margin-top: 0;
         white-space: nowrap;
-        width: 100%;
     }
     
-    .table thead, .table tbody, .table tr {
-        display: table;
-        width: 100%;
-        table-layout: fixed;
-    }
-    
-    /* FIX: Set min-width for table columns to prevent header wrapping */
     .table th, .table td {
-        min-width: 80px; 
-        box-sizing: border-box;
+        /* Hayaan ang laman na mag-adjust, tanggalin ang fixed min-width */
+        padding: 10px 12px; 
+        white-space: nowrap;
     }
-    .table th:nth-child(1), .table td:nth-child(1) { /* Name */
-        min-width: 150px;
-    }
-    .table th:last-child, .table td:last-child { /* Actions/Size Stocks */
-        min-width: 120px;
-    }
-    
+
     .history-items-table .btn-sm {
         padding: 4px 8px; /* Mas maliit na padding */
         font-size: 10px; /* Mas maliit na font */
@@ -2279,15 +2296,17 @@ select.form-input {
     }
     
     /* FIX: Button Alignment in Confirmation Modals */
+    #customConfirmModal > .modal-content > div:last-child {
+        /* Target the div containing the buttons inside the modal-content */
+        display: flex;
+        gap: 10px; 
+        justify-content: center;
+    }
+
     #customConfirmModal .btn, #customConfirmModal .btn-outline {
         min-width: 120px; /* Pantayin ang lapad */
         height: 44px;
         justify-content: center;
-    }
-    
-    #customConfirmModal > div > div:last-child {
-        justify-content: space-around !important; /* Pantayin ang pagitan ng buttons */
-        width: 100%;
     }
 }
 

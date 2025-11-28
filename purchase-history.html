@@ -62,8 +62,7 @@
     </div>
 
     <div class="container">
-<!-- Sales Report Dashboard -->
-        <div class="section">
+<div class="section">
             <div class="section-header">
                 <h2>Sales Report</h2>
                 <div class="date-filter">
@@ -91,8 +90,7 @@
                 </div>
             </div>
 
-<!-- Payment Methods Breakdown -->
-            <div class="section" style="margin-top: 20px;">
+<div class="section" style="margin-top: 20px;">
                 <h3>Payment Methods</h3>
                 <div class="payment-methods-grid">
                     <div class="payment-method-card cash">
@@ -107,8 +105,7 @@
             </div>
         </div>
 
-<!-- Category Sales Breakdown -->
-        <div class="section">
+<div class="section">
             <div class="section-header">
                 <h2>Category Sales</h2>
                 <div class="report-controls">
@@ -139,8 +136,7 @@
         </div>
     </div>
 
-<!-- Voided Transactions Modal -->
-    <div class="modal" id="voidedModal">
+<div class="modal" id="voidedModal">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title">Voided Transactions</div>
@@ -151,7 +147,7 @@
             </div>
             
             <div class="form-actions">
-                <button type="button" class="btn btn-outline" onclick="closeVoidedModal()">&nbsp;&nbsp;Close</button>
+                <button type="button" class="btn btn-outline" onclick="closeVoidedModal()">Close</button>
             </div>
         </div>
     </div>
@@ -166,7 +162,7 @@
             </div>
         
         <div class="form-actions" style="padding: 15px 20px; border-top: 1px solid #eee; background: white; border-radius: 0 0 8px 8px;">
-            <button type="button" class="btn btn-outline" onclick="closeReceiptModal()">&nbsp;&nbsp;Close</button>
+            <button type="button" class="btn btn-outline" onclick="closeReceiptModal()">Close</button>
             <button type="button" class="btn btn-primary" onclick="printReceiptFromModal()">🖨️ Print</button>
         </div>
     </div>
@@ -187,7 +183,7 @@
                     <input type="password" class="form-input" id="secPass" required>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn btn-outline" onclick="closeSecurityModal()">&nbsp;Cancel</button>
+                    <button type="button" class="btn btn-outline" onclick="closeSecurityModal()">Cancel</button>
                     <button type="submit" class="btn btn-danger">Confirm Void</button>
                 </div>
             </form>
@@ -204,7 +200,7 @@
                 </p>
             </div>
             <div style="display: flex; gap: 10px; justify-content: center;">
-                <button class="btn btn-outline" onclick="closeConfirmModal()" style="min-width: 100px; background: white; border-color: #ef4444; color: #ef4444;">&nbsp;Cancel</button>
+                <button class="btn btn-outline" onclick="closeConfirmModal()" style="min-width: 100px; background: white; border-color: #ef4444; color: #ef4444;">Cancel</button>
                 <button class="btn btn-danger" id="confirmActionBtn" style="min-width: 100px;">Yes, Void It</button>
             </div>
         </div>

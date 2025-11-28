@@ -33,8 +33,7 @@
     </div>
 
     <div class="container">
-<!-- Categories Section -->
-        <div class="section">
+<div class="section">
             <div class="section-header">
                 <h2>Categories</h2>
                 <button class="btn btn-primary" onclick="openCategoryModal()">
@@ -46,7 +45,6 @@
             </div>
         </div>
 
-        <!-- Products Section -->
         <div class="section">
             <div class="section-header">
                 <h2>Products</h2>
@@ -73,7 +71,6 @@
             </div>
         </div>
     </div>
-<!-- Category Modal -->
 <div class="modal" id="categoryModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -90,8 +87,7 @@
             <div class="form-group">
                 <label class="form-label">Icon</label>
                 <div class="icons-grid" id="categoryIcons">
-                    <!-- Icons will be loaded here -->
-                </div>
+                    </div>
             </div>
             
             <div class="form-group">
@@ -100,8 +96,7 @@
                 </div>
             </div>
 
-<!-- Size Options Section -->
-            <div id="sizeOptionsSection" style="display: none;">
+<div id="sizeOptionsSection" style="display: none;">
                 <div class="form-group">
                     <label class="form-label">Size Options (for Drinks)</label>
                     
@@ -129,15 +124,14 @@
                 </div>
             </div>
                 <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
-                    <button type="button" class="btn btn-outline" onclick="closeCategoryModal()" style="padding: 10px 20px;">Cancel</button>
-                    <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">Save Category</button>
+                    <button type="button" class="btn btn-outline" onclick="closeCategoryModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Category</button>
                 </div>
             </form>
         </div>
     </div>
 
- <!-- Product Modal -->
-    <div class="modal" id="productModal">
+ <div class="modal" id="productModal">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title" id="productModalTitle">Add Product</div>
@@ -182,14 +176,13 @@
                 </div>
                 
                 <div class="form-actions">
-                    <button type="button" class="btn btn-outline" onclick="closeProductModal()">&nbsp;Cancel</button>
+                    <button type="button" class="btn btn-outline" onclick="closeProductModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Product</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Shop Settings Modal -->
     <div class="modal" id="shopSettingsModal">
     <div class="modal-content" style="max-width: 400px;">
         <div class="modal-header">
@@ -246,7 +239,7 @@
             </div>
             
                 <div class="form-actions">
-                    <button type="button" class="btn btn-outline" onclick="closeShopSettingsModal()">&nbsp;Cancel</button>
+                    <button type="button" class="btn btn-outline" onclick="closeShopSettingsModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
@@ -267,8 +260,8 @@
                     <input type="password" class="form-input" id="securityPass" required>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn btn-outline" onclick="closeReLoginModal()">&nbsp;Cancel</button>
-                    <button type="submit" class="btn btn-primary">&nbsp;&nbsp;Verify</button>
+                    <button type="button" class="btn btn-outline" onclick="closeReLoginModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Verify</button>
                 </div>
             </form>
         </div>
@@ -291,7 +284,7 @@
                     <small style="color: #666;">Enter the actual physical count.</small>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn btn-outline" onclick="closeStockEditModal()">&nbsp;Cancel</button>
+                    <button type="button" class="btn btn-outline" onclick="closeStockEditModal()">Cancel</button>
                     <button type="submit" class="btn btn-success">Update Stock</button>
                 </div>
             </form>

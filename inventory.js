@@ -1,4 +1,4 @@
-// inventory.js - Inventory management functionality
+// inventory.js - POS page functionality
 
 let selectedCategoryForHistory = null;
 let selectedDateForHistory = null;
@@ -386,11 +386,17 @@ function loadProductsTable() {
         let sizeStocksDisplay = '-';
 
         if (isSizedProduct) {
-            stockDisplay = `<span style="color: #666;">${product.stock}</span>`;
+            stockDisplay = `
+                <span style="color: #666; font-weight:bold; display:block;">${product.stock}</span>
+                <button class="edit-stock-btn" onclick="initiateEdit('${product.id}', null, ${product.stock})" title="Edit Total Stock">
+                    ✏️
+                </button>
+            `;
             
+            // FIX: Use <div> with display block for clearer line breaks
             sizeStocksDisplay = Object.entries(product.sizeStocks)
                 .map(([size, stock]) => `
-                    <div class="size-stock-row">
+                    <div class="size-stock-row" style="white-space: nowrap;">
                         <span>${size}: <strong>${stock}</strong></span>
                         <button class="edit-stock-btn" onclick="initiateEdit('${product.id}', '${size}', ${stock})" title="Edit ${size} Stock">
                             ✏️
@@ -400,16 +406,18 @@ function loadProductsTable() {
 
         } else {
             stockDisplay = `
-                <span style="font-weight:bold; font-size:1.1em;">${product.stock}</span>
+                <span style="font-weight:bold; font-size:1.1em; display:block;">${product.stock}</span>
                 <button class="edit-stock-btn" onclick="initiateEdit('${product.id}', null, ${product.stock})" title="Edit Stock">
                     ✏️
                 </button>
             `;
         }
+        
         let priceDisplay = `₱${(product.price || 0).toFixed(2)}`;
         if (product.sizePrices && Object.keys(product.sizePrices).length > 0) {
+            // FIX: Use <span> with display:block for multiple prices in one column
             priceDisplay = Object.entries(product.sizePrices)
-                .map(([size, price]) => `<div style="font-size:12px;">${size}: ₱${price.toFixed(2)}</div>`)
+                .map(([size, price]) => `<span style="font-size:12px; display:block;">${size}: ₱${price.toFixed(2)}</span>`)
                 .join('');
         }
         

@@ -131,8 +131,8 @@ function loadSalesHistory(salesData) {
             
             const itemsString = sale.items.map(item => {
                 const product = products.find(p => p.id === item.productId);
-                return product ? `${item.quantity}x ${product.name}` : 'Unknown Product';
-            }).join(', ');
+                return product ? `${item.quantity}x ${product.name} (${item.size || 'No Size'})` : 'Unknown Product';
+            }).join('<br>'); // Gumamit ng <br> para magkahiwalay ang items sa loob ng cell
             
             row.innerHTML = `
                 <td>${timeString}</td>
@@ -409,8 +409,9 @@ function generateHistoryTable(salesData) {
         
         const itemsString = sale.items.map(item => {
             const product = products.find(p => p.id === item.productId);
+            // Use <br> tag for clearer line breaks in downloaded report
             return `${item.quantity}x ${product ? product.name : 'Unknown Product'} (${item.size || 'N/A'})`;
-        }).join('<br>');
+        }).join('<br>'); 
         const discountType = sale.discount > 0 ? sale.discountType.toUpperCase() : 'N/A';
 
         tableHTML += `
