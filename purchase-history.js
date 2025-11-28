@@ -135,6 +135,7 @@ function loadSalesHistory(salesData) {
                 return product ? `${item.quantity}x ${product.name} (${item.size || 'No Size'})` : 'Unknown Product';
             }).join('<br>'); // Gumamit ng <br> para magkahiwalay ang items sa loob ng cell
             
+            // FIX: Inayos ang pagkakasunod-sunod at paglalagay ng data sa tamang <td> element
             row.innerHTML = `
                 <td>${timeString}</td>
                 <td>${itemsString}</td>
