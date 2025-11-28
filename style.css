@@ -2164,13 +2164,19 @@ select.form-input {
     }
     
     .cart-panel {
-        height: 400px; /* Give cart a fixed height for scrolling */
+        /* FIX: Changed fixed height to auto/max-height for better flow */
+        height: auto; 
+        max-height: 80vh; 
+        margin-bottom: 24px; /* Added spacing after cart */
     }
     
     .queue-panel {
-        width: 100%; /* Make queue panel full width */
-        margin-left: 0; /* Remove fixed left margin */
-        height: 350px; /* Give queue a fixed height */
+        width: 100%; 
+        margin-left: 0; 
+        /* FIX: Changed fixed height to auto/min-height */
+        height: auto; 
+        min-height: 150px; 
+        max-height: 50vh; 
     }
     
     .products-grid {
