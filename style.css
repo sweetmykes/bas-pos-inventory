@@ -97,6 +97,8 @@ body {
     align-items: center;
     gap: 8px;
     height: 44px;
+    /* FIX: Ensure default button content is centered */
+    justify-content: center; 
 }
 
 .btn-primary {
@@ -2184,7 +2186,7 @@ select.form-input {
     }
     
     .table {
-        /* Make table scrollable horizontally for Inventory/History */
+        /* FIX: Make table scrollable horizontally for Inventory/History */
         display: block;
         overflow-x: auto;
         white-space: nowrap;
@@ -2195,6 +2197,24 @@ select.form-input {
         display: table;
         width: 100%;
         table-layout: fixed;
+    }
+    
+    /* FIX: Set min-width for table columns to prevent header wrapping */
+    .table th, .table td {
+        min-width: 80px; 
+        box-sizing: border-box;
+    }
+    .table th:nth-child(1), .table td:nth-child(1) { /* Name */
+        min-width: 150px;
+    }
+    .table th:last-child, .table td:last-child { /* Actions/Size Stocks */
+        min-width: 120px;
+    }
+    
+    .history-items-table .btn-sm {
+        padding: 4px 8px; /* Mas maliit na padding */
+        font-size: 10px; /* Mas maliit na font */
+        height: 28px;
     }
     
     .nav {
@@ -2209,6 +2229,7 @@ select.form-input {
         padding: 8px 12px;
         font-size: 12px;
         height: 38px;
+        justify-content: center; /* FIX: Ensure button text is centered */
     }
     
     .header-content {
@@ -2255,6 +2276,18 @@ select.form-input {
     }
     .date-filter input {
         flex: 1;
+    }
+    
+    /* FIX: Button Alignment in Confirmation Modals */
+    #customConfirmModal .btn, #customConfirmModal .btn-outline {
+        min-width: 120px; /* Pantayin ang lapad */
+        height: 44px;
+        justify-content: center;
+    }
+    
+    #customConfirmModal > div > div:last-child {
+        justify-content: space-around !important; /* Pantayin ang pagitan ng buttons */
+        width: 100%;
     }
 }
 
