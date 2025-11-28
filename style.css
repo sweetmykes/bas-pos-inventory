@@ -138,7 +138,8 @@ body {
 /* POS Layout */
 .pos-layout {
     display: grid;
-    grid-template-columns: 1fr 400px;
+    /* Default: 3 columns for desktop */
+    grid-template-columns: 1fr 400px 300px; 
     gap: 24px;
     height: calc(100vh - 120px);
 }
@@ -1324,7 +1325,7 @@ select.form-input {
 
 .notification.success {
     background: var(--success);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 44px 12px rgba(16, 185, 129, 0.3);
 }
 
 .notification.error {
@@ -2126,6 +2127,7 @@ select.form-input {
 /* Update POS layout to include queue panel */
 .pos-layout {
     display: grid;
+    /* Default: 3 columns for desktop */
     grid-template-columns: 1fr 400px 300px; 
     gap: 24px;
     height: calc(100vh - 120px);
@@ -2142,14 +2144,33 @@ select.form-input {
 
 
 /* Responsive */
+@media (max-width: 1024px) {
+    /* For medium tablets/laptops, slightly reduce fixed columns to make space */
+    .pos-layout {
+        grid-template-columns: 1fr 300px 250px; 
+        gap: 16px;
+    }
+    .cart-panel, .queue-panel {
+        padding: 15px;
+    }
+}
+
 @media (max-width: 768px) {
     .pos-layout {
+        /* Stack all columns vertically on smaller screens */
         grid-template-columns: 1fr;
         height: auto;
+        gap: 24px;
     }
     
     .cart-panel {
-        height: 400px;
+        height: 400px; /* Give cart a fixed height for scrolling */
+    }
+    
+    .queue-panel {
+        width: 100%; /* Make queue panel full width */
+        margin-left: 0; /* Remove fixed left margin */
+        height: 350px; /* Give queue a fixed height */
     }
     
     .products-grid {
@@ -2157,28 +2178,43 @@ select.form-input {
     }
     
     .table {
-        font-size: 14px;
+        /* Make table scrollable horizontally for Inventory/History */
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        width: 100%;
     }
     
-    .table th,
-    .table td {
-        padding: 8px 12px;
+    .table thead, .table tbody, .table tr {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
     }
     
     .nav {
+        /* Make nav buttons wrap on two lines if needed */
         flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
         gap: 8px;
     }
     
     .btn {
-        padding: 8px;
+        padding: 8px 12px;
         font-size: 12px;
+        height: 38px;
     }
     
     .header-content {
+        /* Stack logo and nav vertically */
         flex-direction: column;
         gap: 16px;
         height: auto;
+        padding: 10px 0;
+    }
+    
+    .logo-text {
+        font-size: 24px; /* Smaller logo text */
     }
     
     .notification {
@@ -2205,6 +2241,36 @@ select.form-input {
     .report-controls {
         width: 100%;
         justify-content: flex-start;
+    }
+
+    .date-filter {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .date-filter input {
+        flex: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .products-grid {
+        /* Even smaller grid columns for small phone screens */
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 6px;
+    }
+    .product-card {
+        max-width: 100%;
+        min-height: 80px;
+        padding: 6px;
+    }
+    .product-name, .product-price {
+        font-size: 11px;
+    }
+    .analytics-grid {
+        grid-template-columns: 1fr; 
+    }
+    .payment-methods-grid {
+        grid-template-columns: 1fr; 
     }
 }
 
