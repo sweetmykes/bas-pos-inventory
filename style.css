@@ -1217,7 +1217,7 @@ select.form-input {
     border-collapse: collapse;
     margin-top: 16px;
     /* FIX: Bigyan ng minimum width para mag-scroll at hindi mag-collapse */
-    min-width: 750px; /* Dagdagan ng 50px para magkasya ang lahat */
+    min-width: 780px; 
     margin-top: 0;
 }
 
@@ -1226,33 +1226,51 @@ select.form-input {
     padding: 8px 12px;
     text-align: left;
     border-bottom: 1px solid var(--border);
-    /* FINAL FIX: Allow wrapping for better alignment in Items/Time (Default is now normal) */
-    white-space: normal; 
     vertical-align: top;
+    /* FIXED: Ensure proper table cell display */
+    display: table-cell;
+    white-space: normal; 
 }
-/* FIX: Specific Column Widths and White Space Control */
+
+/* FIXED: Specific Column Widths and White Space Control */
 .history-items-table th:nth-child(1), 
 .history-items-table td:nth-child(1) { /* Time */
     min-width: 100px;
-    white-space: nowrap; /* Prevent time from wrapping */
+    white-space: nowrap;
 }
+
 .history-items-table th:nth-child(2), 
 .history-items-table td:nth-child(2) { /* Items */
-    min-width: 250px;
+    min-width: 280px;
 }
+
 .history-items-table th:nth-child(3), 
 .history-items-table td:nth-child(3) { /* Total */
     min-width: 100px;
     white-space: nowrap;
 }
+
 .history-items-table th:nth-child(4), 
 .history-items-table td:nth-child(4) { /* Payment */
     min-width: 120px;
-    white-space: nowrap; /* Payment badge and text should not wrap */
+    white-space: nowrap;
 }
+
+/* FIXED: Proper table cell styling for Actions column */
+.history-items-table th:nth-child(5), 
 .history-items-table td:nth-child(5) { /* Actions Column */
-    min-width: 180px; 
-    white-space: nowrap; /* Keep buttons together */
+    min-width: 180px;
+    white-space: nowrap;
+    text-align: center;
+    display: table-cell; /* Ensure it stays as table cell */
+}
+
+/* Container for buttons in Actions column */
+.action-buttons-container {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+    align-items: center;
 }
 
 .history-items-table th {
@@ -2241,12 +2259,12 @@ select.form-input {
     
     .history-items-table {
         /* FIX: Bigyan ng minimum width para mag-scroll at hindi mag-collapse */
-        min-width: 700px; 
+        min-width: 780px; /* Consistent min-width */
         margin-top: 0;
     }
     
     .table th, .table td {
-        /* Hayaan ang laman na mag-adjust, tanggalin ang fixed min-width */
+        /* Hayaan ang lamen na mag-adjust, tanggalin ang fixed min-width */
         padding: 10px 12px; 
         white-space: normal; /* FINAL FIX: Allow wrapping for better alignment in Inventory */
     }
@@ -2255,16 +2273,29 @@ select.form-input {
     .history-items-table td {
         white-space: normal;
     }
-    /* FIX: Ensure Actions column is wide enough and content won't wrap */
-    .history-items-table td:nth-child(5) { 
-        min-width: 160px; /* Give ample space for Receipt and Void buttons */
+    /* FIX: Specific Column Widths and White Space Control */
+    .history-items-table th:nth-child(1), .history-items-table td:nth-child(1) { /* Time */
+        min-width: 100px;
         white-space: nowrap; 
     }
-    /* FIX: Ensure Payment column data doesn't wrap unnecessarily */
-    .history-items-table th:nth-child(4), 
-    .history-items-table td:nth-child(4) { 
-        min-width: 110px; 
+    .history-items-table th:nth-child(2), .history-items-table td:nth-child(2) { /* Items */
+        min-width: 280px;
+    }
+    .history-items-table th:nth-child(3), .history-items-table td:nth-child(3) { /* Total */
+        min-width: 100px;
+        white-space: nowrap;
+    }
+    .history-items-table th:nth-child(4), .history-items-table td:nth-child(4) { /* Payment */
+        min-width: 120px;
         white-space: nowrap; 
+    }
+    /* FIXED: Proper table cell styling for Actions column */
+    .history-items-table th:nth-child(5), 
+    .history-items-table td:nth-child(5) { /* Actions Column */
+        min-width: 180px;
+        white-space: nowrap;
+        text-align: center;
+        display: table-cell; /* Ensure it stays as table cell */
     }
 
     .history-items-table .btn-sm {
