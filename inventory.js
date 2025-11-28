@@ -386,11 +386,9 @@ function loadProductsTable() {
         let sizeStocksDisplay = '-';
 
         if (isSizedProduct) {
+            // For drinks - Total stock is not editable, just display it
             stockDisplay = `
-                <span style="color: #666; font-weight:bold; display:block;">${product.stock}</span>
-                <button class="edit-stock-btn" onclick="initiateEdit('${product.id}', null, ${product.stock})" title="Edit Total Stock">
-                    ✏️
-                </button>
+                <span style="font-weight:bold; font-size:1.1em; display:block;">${product.stock}</span>
             `;
             
             // FIX: Use <div> with display block for clearer line breaks
@@ -405,12 +403,14 @@ function loadProductsTable() {
                 `).join('');
 
         } else {
+            // For non-drinks - Stock is editable
             stockDisplay = `
                 <span style="font-weight:bold; font-size:1.1em; display:block;">${product.stock}</span>
                 <button class="edit-stock-btn" onclick="initiateEdit('${product.id}', null, ${product.stock})" title="Edit Stock">
                     ✏️
                 </button>
             `;
+            sizeStocksDisplay = '-';
         }
         
         let priceDisplay = `₱${(product.price || 0).toFixed(2)}`;
@@ -537,10 +537,13 @@ function handleStockUpdate(event) {
         const product = products[productIndex];
         
         if (pendingEdit.sizeName) {
+            // Update specific size stock for drinks
             product.sizeStocks[pendingEdit.sizeName] = newStock;
+            // Recalculate total stock for the product
             product.stock = Object.values(product.sizeStocks).reduce((a, b) => a + b, 0);
             
         } else {
+            // Update stock for non-drinks
             product.stock = newStock;
         }
         saveProducts();

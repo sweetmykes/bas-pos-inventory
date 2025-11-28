@@ -859,6 +859,126 @@ select.form-input {
     display: flex;
     gap: 8px;
 }
+/* Add this to your existing style.css file */
+
+/* Inventory Table Styles */
+.inventory-table {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.table th {
+    background: #f8fafc;
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+.table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: normal;
+}
+
+.table tr:hover {
+    background: #f9fafb;
+}
+
+/* Size Stock Row Styles */
+.size-stock-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px dashed #eee;
+    white-space: nowrap;
+}
+
+.size-stock-row:last-child {
+    border-bottom: none;
+}
+
+/* Edit Stock Button */
+.edit-stock-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--primary);
+    padding: 2px 6px;
+    margin-left: 5px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    opacity: 0.6;
+}
+
+.edit-stock-btn:hover {
+    background-color: #eff6ff;
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+/* For drinks category - make total stock non-editable */
+.total-stock-readonly {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: var(--dark);
+    display: block;
+}
+
+/* Category with icon in table */
+.category-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.category-with-icon .category-icon {
+    font-size: 1.2em;
+    margin: 0;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .inventory-table {
+        overflow-x: auto;
+        display: block;
+        width: 100%;
+    }
+    
+    .table th, .table td {
+        padding: 10px 12px;
+        white-space: normal;
+    }
+    
+    .size-stock-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .edit-stock-btn {
+        align-self: flex-end;
+    }
+}
 
 /* Category Cards with Colors */
 .categories-grid {
