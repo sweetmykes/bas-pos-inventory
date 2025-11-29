@@ -11,11 +11,14 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo-container" onclick="openLoginModal()">
-                    <img src="C:\Users\Mico\OneDrive\Desktop\PROJECTS\POS\pics\logo.png" alt="" class="logo-img" onerror="this.style.display='none'">
+                    <img src="pics/logo.png" alt="" class="logo-img" onerror="this.style.display='none'">
                     <div class="logo-text" id="posTitle">POS</div>
                 </div>
                 <div class="nav">
-                </div>
+                    <button class="btn btn-outline" onclick="openQueueModal()">
+                        <span id="queueNavCount">0 orders</span>
+                    </button>
+                    </div>
             </div>
         </div>
     </div>
@@ -77,19 +80,7 @@
                 </div>
             </div>
 
-            <div class="queue-panel">
-                <div class="queue-header">
-                    <div class="queue-title">Queueing Line</div>
-                    <div class="queue-count" id="queueCount">0 orders</div>
-                </div>
-                
-                <div class="queue-items" id="queueItems">
-                    <div class="text-center" style="color: var(--secondary); padding: 40px;">
-                        No active orders
-                    </div>
-                </div>
             </div>
-        </div>
     </div>
 
     <div class="modal" id="loginModal">
@@ -283,6 +274,24 @@
         </div>
     </div>
 
+    <div class="modal" id="queueModal" style="z-index: 27000;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <div class="modal-title">Queueing Line (<span id="queueModalCount">0 orders</span>)</div>
+                <button class="close-btn" onclick="closeQueueModal()">&times;</button>
+            </div>
+            
+            <div class="queue-items-modal" id="queueItemsModal">
+                <div class="text-center" style="color: var(--secondary); padding: 40px;">
+                    No active orders
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" onclick="closeQueueModal()">Close</button>
+            </div>
+        </div>
+    </div>
     <script src="data.js"></script>
     <script src="pos.js"></script>
 </body>

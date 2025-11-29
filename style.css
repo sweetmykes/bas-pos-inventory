@@ -140,8 +140,8 @@ body {
 /* POS Layout */
 .pos-layout {
     display: grid;
-    /* Default: 3 columns for desktop */
-    grid-template-columns: 1fr 400px 300px; 
+    /* UPDATED: Removed the third column (300px) */
+    grid-template-columns: 1fr 400px; 
     gap: 24px;
     height: calc(100vh - 120px);
 }
@@ -2193,46 +2193,19 @@ select.form-input {
 .pop-up-anim {
     animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
-/* Queue Panel Styles */
+/* Queue Panel Styles - UPDATED for Modal */
 .queue-panel {
-    background: white;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    margin-left: 24px;
-    width: 300px;
+    /* REMOVED: No longer a fixed panel on the side */
+    display: none; 
 }
 
-.queue-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid var(--border);
-}
-
-.queue-title {
-    font-size: 20px;
-    font-weight: bold;
-    color: var(--primary);
-}
-
-.queue-count {
-    background: var(--primary);
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.queue-items {
-    flex: 1;
+/* NEW: Style for Queue Items in the modal */
+.queue-items-modal {
+    max-height: 50vh;
     overflow-y: auto;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
 }
 
 .queue-item {
@@ -2303,11 +2276,11 @@ select.form-input {
     font-style: italic;
 }
 
-/* Update POS layout to include queue panel */
+/* Update POS layout to reflect 2 columns */
 .pos-layout {
     display: grid;
-    /* Default: 3 columns for desktop */
-    grid-template-columns: 1fr 400px 300px; 
+    /* UPDATED: 2 columns for desktop */
+    grid-template-columns: 1fr 400px; 
     gap: 24px;
     height: calc(100vh - 120px);
 }
@@ -2324,12 +2297,12 @@ select.form-input {
 
 /* Responsive */
 @media (max-width: 1024px) {
-    /* For medium tablets/laptops, slightly reduce fixed columns to make space */
+    /* For medium tablets/laptops, slightly reduce fixed column */
     .pos-layout {
-        grid-template-columns: 1fr 300px 250px; 
+        grid-template-columns: 1fr 350px; 
         gap: 16px;
     }
-    .cart-panel, .queue-panel {
+    .cart-panel {
         padding: 15px;
     }
 }
@@ -2350,9 +2323,9 @@ select.form-input {
     }
     
     .queue-panel {
+        /* REMOVED: No longer applicable to a modal */
         width: 100%; 
         margin-left: 0; 
-        /* FIX: Changed fixed height to auto/min-height */
         height: auto; 
         min-height: 150px; 
         max-height: 50vh; 
@@ -2484,20 +2457,20 @@ select.form-input {
     .date-filter input {
         flex: 1;
     }
-    
-    /* FIX: Button Alignment in Confirmation Modals */
     #customConfirmModal > .modal-content > div:last-child {
-        /* Target the div containing the buttons inside the modal-content */
         display: flex;
         gap: 10px; 
         justify-content: center;
     }
 
     #customConfirmModal .btn, #customConfirmModal .btn-outline {
-        min-width: 120px; /* Pantayin ang lapad */
+        min-width: 120px;
         height: 44px;
         justify-content: center;
     }
+}
+#orderDetailsModal {
+    z-index: 35000 !important; 
 }
 
 @media (max-width: 480px) {

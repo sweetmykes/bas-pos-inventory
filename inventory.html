@@ -11,7 +11,7 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo-container">
-                    <img src="C:\Users\Mico\OneDrive\Desktop\PROJECTS\POS\pics\logo.png" alt="Ksweets Logo" class="logo-img" onerror="this.style.display='none'">
+                    <img src="pics/logo.png" alt="" class="logo-img" onerror="this.style.display='none'">
                     <div class="logo-text">Inventory</div>
                 </div>
                 <div class="nav">
@@ -267,29 +267,29 @@
         </div>
     </div>
 
-    <div class="modal" id="stockEditModal">
-        <div class="modal-content" style="max-width: 350px;">
-            <div class="modal-header">
-                <div class="modal-title">Update Stock</div>
-                <button class="close-btn" onclick="closeStockEditModal()">&times;</button>
-            </div>
-            <form onsubmit="handleStockUpdate(event)">
-                <div class="form-group">
-                    <label class="form-label" id="stockEditLabel">Current Stock</label>
-                    <div style="font-size: 24px; font-weight: bold; margin-bottom: 10px; color: var(--primary);" id="currentStockDisplay">0</div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">New Stock Quantity</label>
-                    <input type="number" class="form-input" id="newStockValue" min="0" required placeholder="Enter new amount">
-                    <small style="color: #666;">Enter the actual physical count.</small>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-outline" onclick="closeStockEditModal()">Cancel</button>
-                    <button type="submit" class="btn btn-success">Update Stock</button>
-                </div>
-            </form>
+  <div class="modal" id="stockEditModal">
+    <div class="modal-content" style="max-width: 350px;">
+        <div class="modal-header">
+            <div class="modal-title">Update Stock</div>
+            <button class="close-btn" onclick="closeStockEditModal()">&times;</button>
         </div>
+        <form onsubmit="handleStockUpdate(event)">
+            <div class="form-group">
+                <label class="form-label" id="stockEditLabel">Current Stock</label>
+                <div style="font-size: 24px; font-weight: bold; margin-bottom: 10px; color: var(--primary);" id="currentStockDisplay">0</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Add Stock Quantity</label> 
+                <input type="number" class="form-input" id="newStockValue" min="0" required placeholder="Enter quantity to add">
+                <small style="color: #666;">Enter the quantity to be added to the current stock.</small>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline" onclick="closeStockEditModal()">Cancel</button>
+                <button type="submit" class="btn btn-success">Update Stock</button>
+            </div>
+        </form>
     </div>
+</div>
     <div class="modal" id="errorAlertModal" style="z-index: 30000;">
         <div class="modal-content error-theme" style="max-width: 400px; text-align: center;">
             <div style="margin-bottom: 15px;">

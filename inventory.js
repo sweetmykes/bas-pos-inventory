@@ -511,9 +511,9 @@ function openStockEditModal() {
     const productName = product ? product.name : 'Item';
     
     if (pendingEdit.sizeName) {
-        label.textContent = `Updating stock for: ${productName} (${pendingEdit.sizeName})`;
+        label.textContent = `Current stock for: ${productName} (${pendingEdit.sizeName})`;
     } else {
-        label.textContent = `Updating stock for: ${productName}`;
+        label.textContent = `Current stock for: ${productName}`;
     }
     
     display.textContent = pendingEdit.currentStock;
@@ -525,12 +525,20 @@ function openStockEditModal() {
 function handleStockUpdate(event) {
     event.preventDefault();
     
-    const newStock = parseInt(document.getElementById('newStockValue').value);
+    // CHANGED: Kinuha ang value na i-a-add.
+    const addedStock = parseInt(document.getElementById('newStockValue').value) || 0;
     
-    if (isNaN(newStock) || newStock < 0) {
-        alert('Please enter a valid number!');
+    // Gumamit ng currentStock mula sa pendingEdit para sa base value.
+    const currentStock = pendingEdit.currentStock;
+    
+    // CALCULATE: Bagong stock = Current + Added
+    const newTotalStock = currentStock + addedStock;
+    
+    if (isNaN(addedStock) || addedStock < 0) {
+        alert('Please enter a valid positive number!');
         return;
     }
+
     const productIndex = products.findIndex(p => p.id == pendingEdit.productId);
     
     if (productIndex !== -1) {
@@ -538,18 +546,27 @@ function handleStockUpdate(event) {
         
         if (pendingEdit.sizeName) {
             // Update specific size stock for drinks
-            product.sizeStocks[pendingEdit.sizeName] = newStock;
+            product.sizeStocks[pendingEdit.sizeName] = newTotalStock; // Gamitin ang bagong total
+            
             // Recalculate total stock for the product
+            // Kailangan i-update ang product.stock gamit ang lahat ng sizeStocks
             product.stock = Object.values(product.sizeStocks).reduce((a, b) => a + b, 0);
             
         } else {
             // Update stock for non-drinks
-            product.stock = newStock;
+            product.stock = newTotalStock; // Gamitin ang bagong total
         }
+        
+        // I-update ang pendingEdit para sa susunod na transaction
+        pendingEdit.currentStock = newTotalStock;
+
         saveProducts();
         loadProductsTable();
-        showNotification('Success', 'Stock updated successfully!', 'success');
+        
+        // I-update ang display para makita ng user ang bagong stock, pero isara na ang modal
+        showNotification('Success', `Stock updated successfully! Added ${addedStock}`, 'success');
         closeStockEditModal();
+        
     }
 }
 function closeReLoginModal() {

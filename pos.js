@@ -11,6 +11,7 @@ updatePOSBranding();
 
 // Initialize POS
 function initPOS() {
+// ... (No change here)
     loadCategories();
     loadProducts();
     loadCart();
@@ -21,6 +22,7 @@ function initPOS() {
 }
 
 function updatePOSBranding() {
+// ... (No change here)
         if (shopInfo.logo) {
             const logoImg = document.querySelector('.logo-img');
             if (logoImg) logoImg.src = shopInfo.logo;
@@ -32,6 +34,7 @@ function updatePOSBranding() {
     }
 //HELPER: ANIMATION TRIGGER
 function triggerAnimation(element) {
+// ... (No change here)
         if (element) {
             element.classList.remove('animate-enter');
             void element.offsetWidth;
@@ -42,6 +45,7 @@ function triggerAnimation(element) {
 
 // Create Size Selection Modal
 function createSizeSelectionModal() {
+// ... (No change here)
         sizeSelectionModal = document.createElement('div');
         sizeSelectionModal.className = 'modal';
         sizeSelectionModal.id = 'sizeSelectionModal';
@@ -63,6 +67,7 @@ function createSizeSelectionModal() {
 
 // Show Size Selection Modal
 function showSizeSelectionModal(product, category) {
+// ... (No change here)
         selectedProductForSize = product;
         const container = document.getElementById('sizeSelectionContainer');
         const title = document.getElementById('sizeModalTitle');
@@ -94,6 +99,7 @@ function showSizeSelectionModal(product, category) {
 
 // Select Size and Add to Cart - NEW FUNCTION
 function selectSize(size, price) {
+// ... (No change here)
         if (!selectedProductForSize) return;
         const productVariant = {
             ...selectedProductForSize,
@@ -108,6 +114,7 @@ function selectSize(size, price) {
 
 // Close Size Selection Modal
 function closeSizeSelectionModal() {
+// ... (No change here)
         selectedProductForSize = null;
         if (sizeSelectionModal) {
             sizeSelectionModal.style.display = 'none';
@@ -116,6 +123,7 @@ function closeSizeSelectionModal() {
 
 // Add product to cart (modified to handle sizes)
 function addProductToCartDirectly(product, selectedSize) {
+// ... (No change here)
         const productId = selectedSize ? `${product.id}_${selectedSize}` : product.id;
         const existingItem = cart.find(item => item.productId === productId);
         let availableStock = product.stock;
@@ -152,6 +160,7 @@ function addProductToCartDirectly(product, selectedSize) {
 
 // Modified addToCart function
 function addToCart(product) {
+// ... (No change here)
         const category = getCategoryById(product.categoryId);
         if (category && category.color === 'blue' && product.sizePrices && Object.keys(product.sizePrices).length > 0) {
             showSizeSelectionModal(product, category);
@@ -160,6 +169,7 @@ function addToCart(product) {
         }
     }
 function updatePOSTitle() {
+// ... (No change here)
         const posTitle = document.getElementById('posTitle');
         if (posTitle && typeof shopInfo !== 'undefined') {
             posTitle.textContent = shopInfo.name + " POS";
@@ -168,6 +178,7 @@ function updatePOSTitle() {
 
 // Load categories for tabs
 function loadCategories() {
+// ... (No change here)
         const categoryTabs = document.getElementById('categoryTabs');
         
         if (!categoryTabs) return;
@@ -197,6 +208,7 @@ function loadCategories() {
 
 // Load products grid
 function loadProducts() {
+// ... (No change here)
         const productsGrid = document.getElementById('productsGrid');
         if (!productsGrid) return;
         triggerAnimation(productsGrid);
@@ -266,6 +278,7 @@ function loadProducts() {
 
 // Create product card - OPTIMIZED SIZE
 function createProductCard(product, category) {
+// ... (No change here)
         const productCard = document.createElement('div');
         productCard.className = `product-card ${category?.color || 'blue'}`;
         let hasStock = product.stock > 0;
@@ -308,6 +321,7 @@ function createProductCard(product, category) {
 
 // Helper function to get category color
 function getCategoryColor(color) {
+// ... (No change here)
         switch(color) {
             case 'blue': return '#3b82f6';
             case 'green': return '#10b981';
@@ -321,6 +335,7 @@ function getCategoryColor(color) {
 
 // Filter products by category
 function filterByCategory(categoryId) {
+// ... (No change here)
         currentCategory = categoryId;
         document.querySelectorAll('.category-tab').forEach(tab => {
             tab.classList.remove('active');
@@ -335,6 +350,7 @@ function filterByCategory(categoryId) {
 
 // Cart functionality
 function loadCart() {
+// ... (No change here)
         const cartItems = document.getElementById('cartItems');
         if (!cartItems) return;
         
@@ -369,6 +385,7 @@ function loadCart() {
 
 // UPDATED FUNCTION to handle sizes
 function updateQuantity(index, change) {
+// ... (No change here)
         const item = cart[index];
         const product = products.find(p => p.id === item.originalProductId || p.id === item.productId);
         
@@ -396,6 +413,7 @@ function updateQuantity(index, change) {
     }
 
 function removeFromCart(index) {
+// ... (No change here)
         const product = products.find(p => p.id === cart[index].productId || p.id === cart[index].originalProductId);
         cart.splice(index, 1);
         saveCart();
@@ -407,6 +425,7 @@ function removeFromCart(index) {
     }
 
 function clearCart() {
+// ... (No change here)
         if (cart.length === 0) return;
         
         if (confirm('Clear all items from cart?')) {
@@ -420,10 +439,12 @@ function clearCart() {
     }
 
 function saveCart() {
+// ... (No change here)
         localStorage.setItem('cart', JSON.stringify(cart));
     }
 
 function updateCartDisplay() {
+// ... (No change here)
         loadCart();
         
         const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -452,6 +473,7 @@ function updateCartDisplay() {
 
 // Discount application
 function applyDiscount(type) {
+// ... (No change here)
         selectedDiscount.type = type;
         
         document.querySelectorAll('.discount-btn').forEach(btn => {
@@ -466,6 +488,7 @@ function applyDiscount(type) {
     }
 
 function resetDiscountButtons() {
+// ... (No change here)
         selectedDiscount = { type: 'none', amount: 0 };
         document.querySelectorAll('.discount-btn').forEach(btn => {
             if (btn.dataset.type === 'none') {
@@ -478,6 +501,7 @@ function resetDiscountButtons() {
 
 // Payment Modal functionality
 function openPaymentModal() {
+// ... (No change here)
         if (cart.length === 0) {
             showNotification('Error', 'Cart is empty!', 'error');
             return;
@@ -496,6 +520,7 @@ function openPaymentModal() {
     }
 
 function selectPaymentOption(method) {
+// ... (No change here)
     const titleElement = document.getElementById('paymentModalTitle');
     
     if (method === 'cash') {
@@ -545,6 +570,7 @@ function selectPaymentOption(method) {
 
 // Function back method (Back Button)
 function backToPaymentSelection() {
+// ... (No change here)
         selectedPaymentMethod = null;
         paymentAmounts = { cash: 0, gcash: 0 };
         document.getElementById('paymentModalTitle').textContent = 'Payment Method';
@@ -572,6 +598,7 @@ function backToPaymentSelection() {
 
 //updateSinglePayment
 function updateSinglePayment() {
+// ... (No change here)
     const amount = parseFloat(document.getElementById('singlePaymentAmount').value) || 0;
     const total = calculateTotal();
     
@@ -596,6 +623,7 @@ function updateSinglePayment() {
 
 //updateMultiPayment
 function updateMultiPayment() {
+// ... (No change here)
     const cashAmount = Math.max(0, parseFloat(document.getElementById('multiCashAmount').value) || 0);
     const gcashAmount = Math.max(0, parseFloat(document.getElementById('multiGcashAmount').value) || 0);
     const total = calculateTotal();
@@ -629,6 +657,7 @@ function updateMultiPayment() {
 
 //updateProcessButton
 function updateProcessButton() {
+// ... (No change here)
     const total = calculateTotal();
     let totalPaid = 0;
     
@@ -655,6 +684,7 @@ function updateProcessButton() {
 }
 
 function calculateTotal() {
+// ... (No change here)
         const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         let discountAmount = 0;
         
@@ -667,137 +697,7 @@ function calculateTotal() {
 
 // UPDATED PROCESS PAYMENT (Saves Correct Change)
 function processPayment() {
-        console.log('=== PROCESS PAYMENT STARTED ===');
-        
-        if (cart.length === 0) {
-            showNotification('Error', 'Cart is empty! Please add items first.', 'error');
-            return;
-        }
-        
-        const total = calculateTotal();
-        
-        if (!selectedPaymentMethod) {
-            showNotification('Error', 'Please select a payment method!', 'error');
-            return;
-        }
-        let totalPaid = 0;
-        if (selectedPaymentMethod === 'multi') {
-            totalPaid = paymentAmounts.cash + paymentAmounts.gcash;
-        } else {
-            totalPaid = selectedPaymentMethod === 'cash' ? paymentAmounts.cash : paymentAmounts.gcash;
-        }
-        
-        const change = Math.max(0, totalPaid - total);
-        
-        const saleData = {
-            items: cart.map(item => ({
-                productId: item.originalProductId || item.productId,
-                quantity: item.quantity,
-                price: item.price,
-                size: item.size
-            })),
-            subtotal: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-            discount: selectedDiscount.type !== 'none' ? total * 0.20 : 0,
-            discountType: selectedDiscount.type,
-            total: total,
-            paymentMethod: selectedPaymentMethod,
-            paymentAmounts: { ...paymentAmounts },
-            change: change 
-        };
-        
-        try {
-            const sale = addSale(saleData);
-            
-            if (sale) {
-                showReceipt(sale);
-                
-                cart = [];
-                selectedDiscount = { type: 'none', amount: 0 };
-                saveCart();
-                updateCartDisplay();
-                resetDiscountButtons();
-                loadProducts();
-                
-                closePaymentModal();
-                showNotification('Success', `Payment processed! Total: ₱${total.toFixed(2)}`, 'success');
-            } else {
-                showNotification('Error', 'Failed to process payment! Please try again.', 'error');
-            }
-        } catch (error) {
-            console.error('Payment error:', error);
-            showNotification('Error', 'System error: ' + error.message, 'error');
-        }
-    }
-
-// Close Payment Modal
-function closePaymentModal() {
-        console.log('Closing payment modal...');
-        
-        selectedPaymentMethod = null;
-        paymentAmounts = { cash: 0, gcash: 0 };
-        
-        document.getElementById('singlePaymentAmount').value = '';
-        document.getElementById('multiCashAmount').value = '';
-        document.getElementById('multiGcashAmount').value = '';
-        
-        document.getElementById('singlePaymentPaid').textContent = '₱0.00';
-        document.getElementById('singlePaymentChange').textContent = '₱0.00';
-        document.getElementById('multiTotalPaid').textContent = '₱0.00';
-        document.getElementById('multiPaymentRemaining').textContent = '₱0.00';
-        
-        document.getElementById('paymentModalTitle').textContent = 'Payment Method';
-        document.getElementById('paymentMethodSelection').style.display = 'block';
-        document.getElementById('singlePaymentSection').style.display = 'none';
-        document.getElementById('multiPaymentSection').style.display = 'none';
-        document.getElementById('processPaymentBtn').disabled = true;
-        
-        document.getElementById('paymentModal').style.display = 'none';
-        
-        console.log('Payment modal closed');
-    }
-
-function updateQueueDisplay() {
-    const queueItems = document.getElementById('queueItems');
-    const queueCount = document.getElementById('queueCount');
-    const activeQueue = getActiveQueue();
-    
-    queueCount.textContent = `${activeQueue.length} order${activeQueue.length !== 1 ? 's' : ''}`;
-    
-    if (activeQueue.length === 0) {
-        queueItems.innerHTML = '<div class="text-center" style="color: var(--secondary); padding: 40px;">No active orders</div>';
-        return;
-    }
-    
-    queueItems.innerHTML = '';
-    activeQueue.forEach(item => {
-        const queueElement = document.createElement('div');
-        queueElement.className = 'queue-item';
-        queueElement.innerHTML = `
-            <div class="queue-number">Queue #${item.queueNumber.toString().padStart(3, '0')}</div>
-            <div class="queue-time">${new Date(item.timestamp).toLocaleTimeString('en-PH', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            })}</div>
-            <div class="queue-items-count">${item.items.length} item${item.items.length !== 1 ? 's' : ''}</div>
-            <div class="queue-total">₱${item.total.toFixed(2)}</div>
-            <div style="display:flex; gap: 8px;">
-                <button class="btn btn-outline btn-sm" onclick="openOrderDetailsModal(${item.queueNumber})">View Order</button>
-                <button class="btn btn-success btn-sm" onclick="completeOrder(${item.queueNumber})">Done</button>
-            </div>
-        `;
-        queueItems.appendChild(queueElement);
-    });
-}
-
-function completeOrder(queueNumber) {
-    if (completeQueueItem(queueNumber)) {
-        updateQueueDisplay();
-        showNotification('Success', `Order #${queueNumber} completed!`, 'success');
-    }
-}
-
-// Update the processPayment function to add to queue
-function processPayment() {
+// ... (No change here)
     console.log('=== PROCESS PAYMENT STARTED ===');
     
     if (cart.length === 0) {
@@ -865,8 +765,170 @@ function processPayment() {
     }
 }
 
+// Close Payment Modal
+function closePaymentModal() {
+// ... (No change here)
+        console.log('Closing payment modal...');
+        
+        selectedPaymentMethod = null;
+        paymentAmounts = { cash: 0, gcash: 0 };
+        
+        document.getElementById('singlePaymentAmount').value = '';
+        document.getElementById('multiCashAmount').value = '';
+        document.getElementById('multiGcashAmount').value = '';
+        
+        document.getElementById('singlePaymentPaid').textContent = '₱0.00';
+        document.getElementById('singlePaymentChange').textContent = '₱0.00';
+        document.getElementById('multiTotalPaid').textContent = '₱0.00';
+        document.getElementById('multiPaymentRemaining').textContent = '₱0.00';
+        
+        document.getElementById('paymentModalTitle').textContent = 'Payment Method';
+        document.getElementById('paymentMethodSelection').style.display = 'block';
+        document.getElementById('singlePaymentSection').style.display = 'none';
+        document.getElementById('multiPaymentSection').style.display = 'none';
+        document.getElementById('processPaymentBtn').disabled = true;
+        
+        document.getElementById('paymentModal').style.display = 'none';
+        
+        console.log('Payment modal closed');
+    }
+
+// UPDATED: updateQueueDisplay to target navbar button and new modal
+function updateQueueDisplay() {
+// ... (No change here)
+    const queueNavCount = document.getElementById('queueNavCount');
+    const queueModalCount = document.getElementById('queueModalCount');
+    const queueItemsModal = document.getElementById('queueItemsModal');
+    const activeQueue = getActiveQueue();
+    
+    // Update Navbar Button
+    const countText = `${activeQueue.length} order${activeQueue.length !== 1 ? 's' : ''}`;
+    if (queueNavCount) queueNavCount.textContent = countText;
+    
+    // Update Modal Title
+    if (queueModalCount) queueModalCount.textContent = countText;
+    
+    if (!queueItemsModal) return;
+
+    if (activeQueue.length === 0) {
+        queueItemsModal.innerHTML = '<div class="text-center" style="color: var(--secondary); padding: 40px;">No active orders</div>';
+        return;
+    }
+    
+    queueItemsModal.innerHTML = '';
+    activeQueue.forEach(item => {
+        const queueElement = document.createElement('div');
+        queueElement.className = 'queue-item';
+        queueElement.innerHTML = `
+            <div class="queue-number">Queue #${item.queueNumber.toString().padStart(3, '0')}</div>
+            <div class="queue-time">${new Date(item.timestamp).toLocaleTimeString('en-PH', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            })}</div>
+            <div class="queue-items-count">${item.items.length} item${item.items.length !== 1 ? 's' : ''}</div>
+            <div class="queue-total">₱${item.total.toFixed(2)}</div>
+            <div style="display:flex; gap: 8px;">
+                <button class="btn btn-outline btn-sm" onclick="openOrderDetailsModal(${item.queueNumber})">View Order</button>
+                <button class="btn btn-success btn-sm" onclick="completeOrder(${item.queueNumber})">Done</button>
+            </div>
+        `;
+        queueItemsModal.appendChild(queueElement);
+    });
+}
+
+function completeOrder(queueNumber) {
+// ... (No change here)
+    if (completeQueueItem(queueNumber)) {
+        updateQueueDisplay();
+        showNotification('Success', `Order #${queueNumber} completed!`, 'success');
+    }
+}
+
+// Update the processPayment function to add to queue
+function processPayment() {
+// ... (No change here)
+    console.log('=== PROCESS PAYMENT STARTED ===');
+    
+    if (cart.length === 0) {
+        showNotification('Error', 'Cart is empty! Please add items first.', 'error');
+        return;
+    }
+    
+    const total = calculateTotal();
+    
+    if (!selectedPaymentMethod) {
+        showNotification('Error', 'Please select a payment method!', 'error');
+        return;
+    }
+    
+    let totalPaid = 0;
+    if (selectedPaymentMethod === 'multi') {
+        totalPaid = paymentAmounts.cash + paymentAmounts.gcash;
+    } else {
+        totalPaid = selectedPaymentMethod === 'cash' ? paymentAmounts.cash : paymentAmounts.gcash;
+    }
+    
+    const change = Math.max(0, totalPaid - total);
+    
+    const saleData = {
+        items: cart.map(item => ({
+            productId: item.originalProductId || item.productId,
+            quantity: item.quantity,
+            price: item.price,
+            size: item.size
+        })),
+        subtotal: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+        discount: selectedDiscount.type !== 'none' ? total * 0.20 : 0,
+        discountType: selectedDiscount.type,
+        total: total,
+        paymentMethod: selectedPaymentMethod,
+        paymentAmounts: { ...paymentAmounts },
+        change: change
+    };
+    
+    try {
+        const sale = addSale(saleData);
+        
+        if (sale) {
+            // Add to queue
+            addToQueue(sale);
+            
+            showReceipt(sale);
+            
+            cart = [];
+            selectedDiscount = { type: 'none', amount: 0 };
+            saveCart();
+            updateCartDisplay();
+            updateQueueDisplay(); // Update queue display
+            resetDiscountButtons();
+            loadProducts();
+            
+            closePaymentModal();
+            showNotification('Success', `Payment processed! Queue #${lastQueueNumber}`, 'success');
+        } else {
+            showNotification('Error', 'Failed to process payment! Please try again.', 'error');
+        }
+    } catch (error) {
+        console.error('Payment error:', error);
+        showNotification('Error', 'System error: ' + error.message, 'error');
+    }
+}
+
+// New: Queue Modal Functions
+function openQueueModal() {
+// ... (No change here)
+    updateQueueDisplay(); // Always update before opening
+    document.getElementById('queueModal').style.display = 'flex';
+}
+
+function closeQueueModal() {
+// ... (No change here)
+    document.getElementById('queueModal').style.display = 'none';
+}
+
 // Update receipt to show queue number instead of barcode
 function showReceipt(saleData) {
+// ... (No change here)
     const receiptContent = document.getElementById('receiptContent');
     
     let itemsHTML = '';
@@ -994,7 +1056,6 @@ function showReceipt(saleData) {
             
             <div class="receipt-divider"></div>
             
-            <!-- QUEUE NUMBER INSTEAD OF BARCODE -->
             <div class="receipt-footer">
                 <div class="receipt-thankyou">${shopFooter}</div>
                 <b><div class="receipt-greeting">Thank you for your purchase!</div></b>
@@ -1012,10 +1073,12 @@ function showReceipt(saleData) {
 }
 
 function closeReceiptModal() {
+// ... (No change here)
         document.getElementById('receiptModal').style.display = 'none';
     }
 
 function printReceipt() {
+// ... (No change here)
         const receiptElement = document.querySelector('.modern-receipt');
         if (!receiptElement) {
             console.error('Receipt element not found');
@@ -1069,7 +1132,6 @@ function printReceipt() {
                         .receipt-payment-method { display: flex; justify-content: space-between; margin-bottom: 5px; }
                         .receipt-payment-row { display: flex; justify-content: space-between; font-size: 11px; }
                         .receipt-footer { text-align: center; font-size: 10px; color: #666; margin-top: 15px; }
-                        .receipt-thankyou { font-weight: bold; margin-bottom: 5px; }
                         .receipt-barcode { display: flex; justify-content: center; gap: 2px; margin-top: 10px; }
                         .barcode-line { width: 2px; height: 30px; background: black; }
                         .barcode-line.short { height: 20px; }
@@ -1085,6 +1147,7 @@ function printReceipt() {
 
 // Login Modal functionality 
 function openLoginModal() {
+// ... (No change here)
         console.log('Opening login modal...');
         document.getElementById('loginModal').style.display = 'flex';
         document.body.classList.add('modal-open'); 
@@ -1097,11 +1160,13 @@ function openLoginModal() {
     }
 
 function closeLoginModal() {
+// ... (No change here)
         document.getElementById('loginModal').style.display = 'none';
         document.body.classList.remove('modal-open'); 
     }
 
 function handleLogin() {
+// ... (No change here)
         console.log('✅ LOGIN BUTTON CLICKED!');
         
         const email = document.getElementById('loginEmail').value;
@@ -1118,6 +1183,9 @@ function handleLogin() {
         }
     }
 function openOrderDetailsModal(queueNumber) {
+    // FIX: Close the Queue Modal when opening Order Details Modal
+    closeQueueModal(); 
+
     const activeQueue = getActiveQueue();
     const item = activeQueue.find(q => q.queueNumber === queueNumber);
     const title = document.getElementById('orderDetailsTitle');
@@ -1163,6 +1231,7 @@ function openOrderDetailsModal(queueNumber) {
     document.getElementById('orderDetailsModal').style.display = 'flex';
 }
 function closeOrderDetailsModal() {
+// ... (No change here)
     document.getElementById('orderDetailsModal').style.display = 'none';
 }
 // Initialize when page loads
