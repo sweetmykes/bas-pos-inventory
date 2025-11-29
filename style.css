@@ -1,4 +1,5 @@
 :root {
+/* ... (Existing :root variables) ... */
     --primary: #2563eb;
     --primary-dark: #1d4ed8;
     --secondary: #64748b;
@@ -140,7 +141,7 @@ body {
 /* POS Layout */
 .pos-layout {
     display: grid;
-    /* UPDATED: Removed the third column (300px) */
+    /* UPDATED: 2 columns for desktop */
     grid-template-columns: 1fr 400px; 
     gap: 24px;
     height: calc(100vh - 120px);
@@ -2457,20 +2458,20 @@ select.form-input {
     .date-filter input {
         flex: 1;
     }
+    
+    /* FIX: Button Alignment in Confirmation Modals */
     #customConfirmModal > .modal-content > div:last-child {
+        /* Target the div containing the buttons inside the modal-content */
         display: flex;
         gap: 10px; 
         justify-content: center;
     }
 
     #customConfirmModal .btn, #customConfirmModal .btn-outline {
-        min-width: 120px;
+        min-width: 120px; /* Pantayin ang lapad */
         height: 44px;
         justify-content: center;
     }
-}
-#orderDetailsModal {
-    z-index: 35000 !important; 
 }
 
 @media (max-width: 480px) {
@@ -2506,4 +2507,9 @@ select.form-input {
 [class*="category-"] {
     font-size: 14px !important;
     font-weight: 600 !important;
+}
+
+/* FIX: Taasan ang z-index ng Order Details Modal para lumabas sa ibabaw ng Queue Modal */
+#orderDetailsModal {
+    z-index: 35000 !important; 
 }
