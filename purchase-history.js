@@ -3,8 +3,20 @@
 let currentCategoryFilter = 'all';
 let currentDate = new Date().toISOString().split('T')[0];
 let currentReceiptContent = ''; 
+let currentReceiptSaleData = null; // NEW: To hold the actual sale object for print
 let pendingVoidId = null;
 let confirmCallback = null;
+
+// ESC/POS Commands (Copied from pos.js for self-contained module)
+const ESC = '\x1B';
+const GS = '\x1D';
+const INIT = `${ESC}@`;
+const BOLD_ON = `${ESC}E\x01`;
+const BOLD_OFF = `${ESC}E\x00`;
+const CENTER = `${ESC}a\x01`;
+const LEFT = `${ESC}a\x00`;
+const CUT = `${GS}V\x00`;
+const LINE_FEED = '\n';
 
 // Initialize
 function initPurchaseHistory() {
@@ -151,11 +163,13 @@ function loadSalesHistory(salesData) {
             salesHistory.appendChild(row);
         });
     }
+
 function handleReceiptClick(saleId) {
         const sale = sales.find(s => s.id == saleId);
         if (sale) {
             const receiptHTML = generateReceiptHTML(sale);
             currentReceiptContent = receiptHTML;
+            currentReceiptSaleData = sale; // NEW: Store the sale data for Bluetooth print
             document.getElementById('receiptModalContent').innerHTML = receiptHTML;
             document.getElementById('receiptModal').style.display = 'flex';
         }
@@ -163,7 +177,137 @@ function handleReceiptClick(saleId) {
 
 function closeReceiptModal() { document.getElementById('receiptModal').style.display = 'none'; }
 
-// REMOVED THE OLD RECEIPT MODAL HERE BAS
+// NEW FUNCTION: Tries to print using Web Bluetooth API (Copied from pos.js)
+async function bluetoothPrint(rawReceipt) {
+    
+    if (!navigator.bluetooth) {
+        showErrorAlert("Bluetooth Error", "Web Bluetooth API is not supported. Printing via standard dialog.");
+        printReceiptStandardFromModal(); 
+        return;
+    }
+
+    try {
+        showNotification("Bluetooth Print", "Searching for thermal printer...", 'info', 0);
+        
+        // NOTE: YOU MUST CHANGE THE UUIDS BELOW TO MATCH YOUR PRINTER'S SERVICE AND CHARACTERISTIC
+        const device = await navigator.bluetooth.requestDevice({
+            filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }], 
+            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', '49535343-fe7d-4ae5-8fa9-9fafd205e455'] 
+        });
+
+        const server = await device.gatt.connect();
+
+        // Use the correct Service UUID
+        const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb'); 
+        
+        // Use the correct Characteristic UUID for writing data
+        const characteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb'); 
+
+        const encoder = new TextEncoder();
+        const data = encoder.encode(rawReceipt);
+
+        // Send in chunks (important for stability)
+        const CHUNK_SIZE = 512;
+        for (let i = 0; i < data.length; i += CHUNK_SIZE) {
+            const chunk = data.slice(i, i + CHUNK_SIZE);
+            await characteristic.writeValue(chunk);
+        }
+        
+        showNotification("Success", "Print job sent successfully via Bluetooth!", 'success', 3000);
+        
+    } catch (error) {
+        showErrorAlert("Bluetooth Print Failed", "Error connecting or sending data. Check printer connection. Details: " + error.message);
+        console.error("Bluetooth print error:", error);
+        // Fallback to standard print dialog
+        printReceiptStandardFromModal();
+    }
+}
+
+// NEW FUNCTION: Generates simple ESC/POS compatible text (Copied from pos.js)
+function generateRawReceipt(saleData) {
+    const shopName = shopInfo.name || 'POS Shop';
+    const shopAddress = shopInfo.address || '';
+    const shopFooter = shopInfo.receiptFooter || 'Thank you!';
+    // Since this is history, we can't reliably get the queue number. Use Ref ID for barcode/queue placeholder
+    const refNumber = saleData.id || 'N/A';
+    const date = new Date(saleData.timestamp).toLocaleString();
+    const total = saleData.total.toFixed(2);
+
+    let receipt = INIT;
+    
+    // Header
+    receipt += CENTER + BOLD_ON + shopName + BOLD_OFF + LINE_FEED;
+    receipt += CENTER + shopAddress + LINE_FEED;
+    receipt += CENTER + `Ref: #${refNumber}` + LINE_FEED;
+    receipt += CENTER + date + LINE_FEED + LINE_FEED;
+    
+    // Items
+    receipt += LEFT + 'QTY ITEM                        TOTAL' + LINE_FEED;
+    receipt += '--------------------------------' + LINE_FEED;
+
+    saleData.items.forEach(item => {
+        const product = products.find(p => p.id === item.productId);
+        const name = product ? product.name : 'Unknown Product';
+        const itemTotal = (item.price * item.quantity).toFixed(2);
+        const details = item.size ? `(${item.size})` : '';
+        const line = `${item.quantity} ${name} ${details}`;
+        
+        receipt += LEFT + line.padEnd(28, ' ').substring(0, 28) + itemTotal.padStart(4, ' ') + LINE_FEED;
+    });
+
+    // Totals
+    receipt += '--------------------------------' + LINE_FEED;
+    receipt += BOLD_ON + `TOTAL: ${total.padStart(25, ' ')}` + BOLD_ON + LINE_FEED;
+    receipt += '--------------------------------' + LINE_FEED + LINE_FEED;
+
+    // Footer
+    receipt += CENTER + shopFooter + LINE_FEED;
+    receipt += CENTER + 'THANK YOU!' + LINE_FEED + LINE_FEED;
+    
+    // Commands to cut paper
+    receipt += LINE_FEED + LINE_FEED + CUT; 
+
+    return receipt;
+}
+
+// NEW FUNCTION: Button handler for history receipt modal
+function printReceiptFromModal() {
+    // If Web Bluetooth is available and we have sale data, try the dedicated thermal printer function
+    if (navigator.bluetooth && currentReceiptSaleData) {
+        const rawReceipt = generateRawReceipt(currentReceiptSaleData); // Use stored sale data
+        bluetoothPrint(rawReceipt);
+        return;
+    }
+    
+    // Fallback to standard browser print
+    printReceiptStandardFromModal();
+}
+
+// NEW FUNCTION: Standard Print Fallback for History Modal
+function printReceiptStandardFromModal() {
+    if (!currentReceiptContent) {
+        console.error('No receipt content to print.');
+        return;
+    }
+    
+    // Create print window and use the stored HTML content
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <title>Print Receipt</title>
+                <style>
+                    /* Use styles from pos.js printReceiptStandard for consistency */
+                </style>
+            </head>
+            <body onload="window.print(); setTimeout(() => window.close(), 500);">
+                <div class="container">${currentReceiptContent}</div>
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
 
 function handleVoidClick(saleId) {
         pendingVoidId = saleId; 

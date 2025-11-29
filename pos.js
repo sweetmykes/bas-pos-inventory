@@ -7,11 +7,22 @@ let selectedPaymentMethod = null;
 let paymentAmounts = { cash: 0, gcash: 0 };
 let selectedProductForSize = null;
 let sizeSelectionModal = null;
+window.lastProcessedSaleData = null; // NEW: Global variable for the last successful sale
 updatePOSBranding();
+
+// ESC/POS Commands (Simplified)
+const ESC = '\x1B';
+const GS = '\x1D';
+const INIT = `${ESC}@`;
+const BOLD_ON = `${ESC}E\x01`;
+const BOLD_OFF = `${ESC}E\x00`;
+const CENTER = `${ESC}a\x01`;
+const LEFT = `${ESC}a\x00`;
+const CUT = `${GS}V\x00`;
+const LINE_FEED = '\n';
 
 // Initialize POS
 function initPOS() {
-// ... (No change here)
     loadCategories();
     loadProducts();
     loadCart();
@@ -22,505 +33,481 @@ function initPOS() {
 }
 
 function updatePOSBranding() {
-// ... (No change here)
-        if (shopInfo.logo) {
-            const logoImg = document.querySelector('.logo-img');
-            if (logoImg) logoImg.src = shopInfo.logo;
-        }
-        if (shopInfo.name) {
-            const logoText = document.querySelector('.logo-text');
-            if (logoText) logoText.textContent = shopInfo.name;
-        }
+    if (shopInfo.logo) {
+        const logoImg = document.querySelector('.logo-img');
+        if (logoImg) logoImg.src = shopInfo.logo;
     }
+    if (shopInfo.name) {
+        const logoText = document.querySelector('.logo-text');
+        if (logoText) logoText.textContent = shopInfo.name + " POS";
+    }
+}
 //HELPER: ANIMATION TRIGGER
 function triggerAnimation(element) {
-// ... (No change here)
-        if (element) {
-            element.classList.remove('animate-enter');
-            void element.offsetWidth;
-            element.classList.add('animate-enter');
-        }
+    if (element) {
+        element.classList.remove('animate-enter');
+        void element.offsetWidth;
+        element.classList.add('animate-enter');
     }
+}
 
 
 // Create Size Selection Modal
 function createSizeSelectionModal() {
-// ... (No change here)
-        sizeSelectionModal = document.createElement('div');
-        sizeSelectionModal.className = 'modal';
-        sizeSelectionModal.id = 'sizeSelectionModal';
-        sizeSelectionModal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <div class="modal-title" id="sizeModalTitle">Select Size</div>
-                    <button class="close-btn" onclick="closeSizeSelectionModal()">&times;</button>
-                </div>
-                <div class="size-selection-container" id="sizeSelectionContainer">
-                    </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-outline" onclick="closeSizeSelectionModal()">Cancel</button>
-                </div>
+    sizeSelectionModal = document.createElement('div');
+    sizeSelectionModal.className = 'modal';
+    sizeSelectionModal.id = 'sizeSelectionModal';
+    sizeSelectionModal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="sizeModalTitle">Select Size</div>
+                <button class="close-btn" onclick="closeSizeSelectionModal()">&times;</button>
             </div>
-        `;
-        document.body.appendChild(sizeSelectionModal);
-    }
+            <div class="size-selection-container" id="sizeSelectionContainer">
+                </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline" onclick="closeSizeSelectionModal()">Cancel</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(sizeSelectionModal);
+}
 
 // Show Size Selection Modal
 function showSizeSelectionModal(product, category) {
-// ... (No change here)
-        selectedProductForSize = product;
-        const container = document.getElementById('sizeSelectionContainer');
-        const title = document.getElementById('sizeModalTitle');
-        
-        title.textContent = `Select Size for ${product.name}`;
-        container.innerHTML = '';
-        Object.keys(product.sizePrices).forEach(size => {
-            if (size.trim() && product.sizeStocks[size] > 0) {
-                const price = product.sizePrices[size];
-                const stock = product.sizeStocks[size];
-                
-                const sizeButton = document.createElement('button');
-                sizeButton.className = 'size-selection-btn';
-                sizeButton.innerHTML = `
-                    <div class="size-name">${size}</div>
-                    <div class="size-price">₱${price.toFixed(2)}</div>
-                    <div class="size-stock">Stock: ${stock}</div>
-                `;
-                sizeButton.onclick = () => selectSize(size, price);
-                container.appendChild(sizeButton);
-            }
-        });
-        if (container.children.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--secondary);">No sizes available</div>';
+    selectedProductForSize = product;
+    const container = document.getElementById('sizeSelectionContainer');
+    const title = document.getElementById('sizeModalTitle');
+    
+    title.textContent = `Select Size for ${product.name}`;
+    container.innerHTML = '';
+    Object.keys(product.sizePrices).forEach(size => {
+        if (size.trim() && product.sizeStocks[size] > 0) {
+            const price = product.sizePrices[size];
+            const stock = product.sizeStocks[size];
+            
+            const sizeButton = document.createElement('button');
+            sizeButton.className = 'size-selection-btn';
+            sizeButton.innerHTML = `
+                <div class="size-name">${size}</div>
+                <div class="size-price">₱${price.toFixed(2)}</div>
+                <div class="size-stock">Stock: ${stock}</div>
+            `;
+            sizeButton.onclick = () => selectSize(size, price);
+            container.appendChild(sizeButton);
         }
-        
-        sizeSelectionModal.style.display = 'flex';
+    });
+    if (container.children.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--secondary);">No sizes available</div>';
     }
+    
+    sizeSelectionModal.style.display = 'flex';
+}
 
 // Select Size and Add to Cart - NEW FUNCTION
 function selectSize(size, price) {
-// ... (No change here)
-        if (!selectedProductForSize) return;
-        const productVariant = {
-            ...selectedProductForSize,
-            selectedSize: size,
-            price: price, 
-            displayName: `${selectedProductForSize.name} (${size})`
-        };
-        
-        addProductToCartDirectly(productVariant, size);
-        closeSizeSelectionModal();
-    }
+    if (!selectedProductForSize) return;
+    const productVariant = {
+        ...selectedProductForSize,
+        selectedSize: size,
+        price: price, 
+        displayName: `${selectedProductForSize.name} (${size})`
+    };
+    
+    addProductToCartDirectly(productVariant, size);
+    closeSizeSelectionModal();
+}
 
 // Close Size Selection Modal
 function closeSizeSelectionModal() {
-// ... (No change here)
-        selectedProductForSize = null;
-        if (sizeSelectionModal) {
-            sizeSelectionModal.style.display = 'none';
-        }
+    selectedProductForSize = null;
+    if (sizeSelectionModal) {
+        sizeSelectionModal.style.display = 'none';
     }
+}
 
 // Add product to cart (modified to handle sizes)
 function addProductToCartDirectly(product, selectedSize) {
-// ... (No change here)
-        const productId = selectedSize ? `${product.id}_${selectedSize}` : product.id;
-        const existingItem = cart.find(item => item.productId === productId);
-        let availableStock = product.stock;
-        if (selectedSize && product.sizeStocks && product.sizeStocks[selectedSize] !== undefined) {
-            availableStock = product.sizeStocks[selectedSize];
-        }
-        
-        if (existingItem) {
-            if (existingItem.quantity >= availableStock) {
-                showNotification('Warning', `Only ${availableStock} items available in stock!`, 'warning');
-                return;
-            }
-            existingItem.quantity++;
-        } else {
-            if (availableStock < 1) {
-                showNotification('Error', 'Product out of stock!', 'error');
-                return;
-            }
-            cart.push({
-                productId: productId,
-                originalProductId: product.id,
-                quantity: 1,
-                price: product.price,
-                size: selectedSize,
-                productName: product.name,
-                displayName: selectedSize ? `${product.name} (${selectedSize})` : product.name
-            });
-        }
-        
-        saveCart();
-        updateCartDisplay();
-        showNotification('Cart Updated', `${selectedSize ? product.name + ' (' + selectedSize + ')' : product.name} added to cart`, 'success', 1000);
+    const productId = selectedSize ? `${product.id}_${selectedSize}` : product.id;
+    const existingItem = cart.find(item => item.productId === productId);
+    let availableStock = product.stock;
+    if (selectedSize && product.sizeStocks && product.sizeStocks[selectedSize] !== undefined) {
+        availableStock = product.sizeStocks[selectedSize];
     }
-
-// Modified addToCart function
-function addToCart(product) {
-// ... (No change here)
-        const category = getCategoryById(product.categoryId);
-        if (category && category.color === 'blue' && product.sizePrices && Object.keys(product.sizePrices).length > 0) {
-            showSizeSelectionModal(product, category);
-        } else {
-            addProductToCartDirectly(product, null);
-        }
-    }
-function updatePOSTitle() {
-// ... (No change here)
-        const posTitle = document.getElementById('posTitle');
-        if (posTitle && typeof shopInfo !== 'undefined') {
-            posTitle.textContent = shopInfo.name + " POS";
-        }
-    }
-
-// Load categories for tabs
-function loadCategories() {
-// ... (No change here)
-        const categoryTabs = document.getElementById('categoryTabs');
-        
-        if (!categoryTabs) return;
-        categoryTabs.innerHTML = `
-            <div class="category-tab active" data-category="all" onclick="filterByCategory('all')">
-                <span class="category-icon">📦</span>
-                <span>All Items</span>
-            </div>
-        `;
-        
-        if (typeof categories === 'undefined' || !categories || categories.length === 0) {
-            return;
-        }
-        
-        categories.forEach(category => {
-            const tab = document.createElement('div');
-            tab.className = `category-tab ${category.color || 'blue'}`;
-            tab.dataset.category = category.id;
-            tab.innerHTML = `
-                <span class="category-icon">${category.icon || '📦'}</span>
-                <span>${category.name}</span>
-            `;
-            tab.onclick = () => filterByCategory(category.id);
-            categoryTabs.appendChild(tab);
-        });
-    }
-
-// Load products grid
-function loadProducts() {
-// ... (No change here)
-        const productsGrid = document.getElementById('productsGrid');
-        if (!productsGrid) return;
-        triggerAnimation(productsGrid);
-        
-        productsGrid.innerHTML = '';
-        productsGrid.style.display = 'grid';
-        productsGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(100px, 1fr))';
-        productsGrid.style.gap = '8px';
-        productsGrid.style.alignItems = 'stretch';
-        
-        if (currentCategory === 'all') {
-            const categoriesWithProducts = categories.map(category => {
-                const categoryProducts = getProductsByCategory(category.id);
-                return {
-                    category: category,
-                    products: categoryProducts
-                };
-            }).filter(group => group.products.length > 0);
-            
-            categoriesWithProducts.sort((a, b) => a.category.name.localeCompare(b.category.name));
-            
-            categoriesWithProducts.forEach(group => {
-                const categorySection = document.createElement('div');
-                categorySection.style.gridColumn = '1 / -1';
-                categorySection.style.marginBottom = '12px';
-                
-                const categoryTitle = document.createElement('div');
-                categoryTitle.className = 'category-section-title';
-                categoryTitle.style.borderLeft = `3px solid ${getCategoryColor(group.category.color)}`;
-                categoryTitle.innerHTML = `<span class="category-icon">${group.category.icon || '📦'}</span> <span>${group.category.name}</span>`;
-                
-                categorySection.appendChild(categoryTitle);
-                
-                const productsContainer = document.createElement('div');
-                productsContainer.style.display = 'grid';
-                productsContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(100px, 1fr))';
-                productsContainer.style.gap = '8px';
-                productsContainer.style.alignItems = 'stretch';
-                
-                group.products.forEach(product => {
-                    productsContainer.appendChild(createProductCard(product, group.category));
-                });
-                
-                categorySection.appendChild(productsContainer);
-                productsGrid.appendChild(categorySection);
-            });
-            
-            return;
-        } else {
-            const productsToShow = getProductsByCategory(currentCategory);
-            
-            if (!productsToShow || productsToShow.length === 0) {
-                productsGrid.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 30px; color: var(--secondary); font-size: 12px;">
-                        No products found in this category.
-                    </div>
-                `;
-                return;
-            }
-            
-            productsToShow.forEach(product => {
-                const category = getCategoryById(product.categoryId);
-                productsGrid.appendChild(createProductCard(product, category));
-            });
-        }
-    }
-
-// Create product card - OPTIMIZED SIZE
-function createProductCard(product, category) {
-// ... (No change here)
-        const productCard = document.createElement('div');
-        productCard.className = `product-card ${category?.color || 'blue'}`;
-        let hasStock = product.stock > 0;
-        if (category?.color === 'blue' && product.sizeStocks) {
-            hasStock = Object.values(product.sizeStocks).some(stock => stock > 0);
-        }
-        
-        if (!hasStock) {
-            productCard.classList.add('out-of-stock');
-        } else if (product.stock <= 5) {
-            productCard.classList.add('low-stock');
-        }
-        
-        let stockBadge = '';
-        if (!hasStock) {
-            stockBadge = '<div class="stock-badge">OUT</div>';
-        } else if (product.stock <= 5) {
-            stockBadge = `<div class="stock-badge">${product.stock}</div>`;
-        }
-        let sizeInfo = '';
-        if (category?.color === 'blue' && product.sizePrices && Object.keys(product.sizePrices).length > 0) {
-            const sizes = Object.keys(product.sizePrices);
-            sizeInfo = `<div class="product-size">${sizes.join('/')}</div>`;
-        }
-        
-        productCard.innerHTML = `
-            ${stockBadge}
-            <div class="product-name">${product.name || 'Unnamed Product'}</div>
-            <div class="product-price">₱${(product.price || 0).toFixed(2)}</div>
-            <div class="product-stock">Stock: ${product.stock || 0}</div>
-            ${sizeInfo}
-        `;
-        
-        if (hasStock) {
-            productCard.onclick = () => addToCart(product);
-        }
-        
-        return productCard;
-    }
-
-// Helper function to get category color
-function getCategoryColor(color) {
-// ... (No change here)
-        switch(color) {
-            case 'blue': return '#3b82f6';
-            case 'green': return '#10b981';
-            case 'orange': return '#f59e0b';
-            case 'red': return '#ef4444';
-            case 'purple': return '#7c3aed';
-            case 'pink': return '#db2777';
-            default: return '#3b82f6';
-        }
-    }
-
-// Filter products by category
-function filterByCategory(categoryId) {
-// ... (No change here)
-        currentCategory = categoryId;
-        document.querySelectorAll('.category-tab').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        const activeTab = document.querySelector(`.category-tab[data-category="${categoryId}"]`);
-        if (activeTab) {
-            activeTab.classList.add('active');
-        }
-        
-        loadProducts();
-    }
-
-// Cart functionality
-function loadCart() {
-// ... (No change here)
-        const cartItems = document.getElementById('cartItems');
-        if (!cartItems) return;
-        
-        cartItems.innerHTML = '';
-        
-        if (cart.length === 0) {
-            cartItems.innerHTML = '<div class="text-center" style="color: var(--secondary); padding: 40px;">Cart is empty</div>';
-            return;
-        }
-        
-        cart.forEach((item, index) => {
-            const product = products.find(p => p.id === item.originalProductId || p.id === item.productId);
-            const displayName = item.displayName || (product ? product.name : 'Unknown Product');
-            
-            const cartItem = document.createElement('div');
-            cartItem.className = 'cart-item';
-            cartItem.innerHTML = `
-                <div class="cart-item-info">
-                    <div class="cart-item-name">${displayName}</div>
-                    <div class="cart-item-price">₱${(item.price || 0).toFixed(2)} × ${item.quantity}</div>
-                </div>
-                <div class="cart-item-quantity">
-                    <button class="quantity-btn" onclick="updateQuantity(${index}, -1)">-</button>
-                    <span>${item.quantity}</span>
-                    <button class="quantity-btn" onclick="updateQuantity(${index}, 1)">+</button>
-                    <button class="remove-btn" onclick="removeFromCart(${index})">🗑️</button>
-                </div>
-            `;
-            cartItems.appendChild(cartItem);
-        });
-    }
-
-// UPDATED FUNCTION to handle sizes
-function updateQuantity(index, change) {
-// ... (No change here)
-        const item = cart[index];
-        const product = products.find(p => p.id === item.originalProductId || p.id === item.productId);
-        
-        if (!product) return;
-        let availableStock = product.stock;
-        if (item.size && product.sizeStocks && product.sizeStocks[item.size] !== undefined) {
-            availableStock = product.sizeStocks[item.size];
-        }
-        
-        const newQuantity = item.quantity + change;
-        
-        if (newQuantity < 1) {
-            removeFromCart(index);
-            return;
-        }
-        
-        if (newQuantity > availableStock) {
+    
+    if (existingItem) {
+        if (existingItem.quantity >= availableStock) {
             showNotification('Warning', `Only ${availableStock} items available in stock!`, 'warning');
             return;
         }
-        
-        item.quantity = newQuantity;
-        saveCart();
-        updateCartDisplay();
+        existingItem.quantity++;
+    } else {
+        if (availableStock < 1) {
+            showNotification('Error', 'Product out of stock!', 'error');
+            return;
+        }
+        cart.push({
+            productId: productId,
+            originalProductId: product.id,
+            quantity: 1,
+            price: product.price,
+            size: selectedSize,
+            productName: product.name,
+            displayName: selectedSize ? `${product.name} (${selectedSize})` : product.name
+        });
     }
+    
+    saveCart();
+    updateCartDisplay();
+    showNotification('Cart Updated', `${selectedSize ? product.name + ' (' + selectedSize + ')' : product.name} added to cart`, 'success', 1000);
+}
+
+// Modified addToCart function
+function addToCart(product) {
+    const category = getCategoryById(product.categoryId);
+    if (category && category.color === 'blue' && product.sizePrices && Object.keys(product.sizePrices).length > 0) {
+        showSizeSelectionModal(product, category);
+    } else {
+        addProductToCartDirectly(product, null);
+    }
+}
+function updatePOSTitle() {
+    const posTitle = document.getElementById('posTitle');
+    if (posTitle && typeof shopInfo !== 'undefined') {
+        posTitle.textContent = shopInfo.name + " POS";
+    }
+}
+
+// Load categories for tabs
+function loadCategories() {
+    const categoryTabs = document.getElementById('categoryTabs');
+    
+    if (!categoryTabs) return;
+    categoryTabs.innerHTML = `
+        <div class="category-tab active" data-category="all" onclick="filterByCategory('all')">
+            <span class="category-icon">📦</span>
+            <span>All Items</span>
+        </div>
+    `;
+    
+    if (typeof categories === 'undefined' || !categories || categories.length === 0) {
+        return;
+    }
+    
+    categories.forEach(category => {
+        const tab = document.createElement('div');
+        tab.className = `category-tab ${category.color || 'blue'}`;
+        tab.dataset.category = category.id;
+        tab.innerHTML = `
+            <span class="category-icon">${category.icon || '📦'}</span>
+            <span>${category.name}</span>
+        `;
+        tab.onclick = () => filterByCategory(category.id);
+        categoryTabs.appendChild(tab);
+    });
+}
+
+// Load products grid
+function loadProducts() {
+    const productsGrid = document.getElementById('productsGrid');
+    if (!productsGrid) return;
+    triggerAnimation(productsGrid);
+    
+    productsGrid.innerHTML = '';
+    productsGrid.style.display = 'grid';
+    productsGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(100px, 1fr))';
+    productsGrid.style.gap = '8px';
+    productsGrid.style.alignItems = 'stretch';
+    
+    if (currentCategory === 'all') {
+        const categoriesWithProducts = categories.map(category => {
+            const categoryProducts = getProductsByCategory(category.id);
+            return {
+                category: category,
+                products: categoryProducts
+            };
+        }).filter(group => group.products.length > 0);
+        
+        categoriesWithProducts.sort((a, b) => a.category.name.localeCompare(b.category.name));
+        
+        categoriesWithProducts.forEach(group => {
+            const categorySection = document.createElement('div');
+            categorySection.style.gridColumn = '1 / -1';
+            categorySection.style.marginBottom = '12px';
+            
+            const categoryTitle = document.createElement('div');
+            categoryTitle.className = 'category-section-title';
+            categoryTitle.style.borderLeft = `3px solid ${getCategoryColor(group.category.color)}`;
+            categoryTitle.innerHTML = `<span class="category-icon">${group.category.icon || '📦'}</span> <span>${group.category.name}</span>`;
+            
+            categorySection.appendChild(categoryTitle);
+            
+            const productsContainer = document.createElement('div');
+            productsContainer.style.display = 'grid';
+            productsContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(100px, 1fr))';
+            productsContainer.style.gap = '8px';
+            productsContainer.style.alignItems = 'stretch';
+            
+            group.products.forEach(product => {
+                productsContainer.appendChild(createProductCard(product, group.category));
+            });
+            
+            categorySection.appendChild(productsContainer);
+            productsGrid.appendChild(categorySection);
+        });
+        
+        return;
+    } else {
+        const productsToShow = getProductsByCategory(currentCategory);
+        
+        if (!productsToShow || productsToShow.length === 0) {
+            productsGrid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 30px; color: var(--secondary); font-size: 12px;">
+                    No products found in this category.
+                </div>
+            `;
+            return;
+        }
+        
+        productsToShow.forEach(product => {
+            const category = getCategoryById(product.categoryId);
+            productsGrid.appendChild(createProductCard(product, category));
+        });
+    }
+}
+
+// Create product card - OPTIMIZED SIZE
+function createProductCard(product, category) {
+    const productCard = document.createElement('div');
+    productCard.className = `product-card ${category?.color || 'blue'}`;
+    let hasStock = product.stock > 0;
+    if (category?.color === 'blue' && product.sizeStocks) {
+        hasStock = Object.values(product.sizeStocks).some(stock => stock > 0);
+    }
+    
+    if (!hasStock) {
+        productCard.classList.add('out-of-stock');
+    } else if (product.stock <= 5) {
+        productCard.classList.add('low-stock');
+    }
+    
+    let stockBadge = '';
+    if (!hasStock) {
+        stockBadge = '<div class="stock-badge">OUT</div>';
+    } else if (product.stock <= 5) {
+        stockBadge = `<div class="stock-badge">${product.stock}</div>`;
+    }
+    let sizeInfo = '';
+    if (category?.color === 'blue' && product.sizePrices && Object.keys(product.sizePrices).length > 0) {
+        const sizes = Object.keys(product.sizePrices);
+        sizeInfo = `<div class="product-size">${sizes.join('/')}</div>`;
+    }
+    
+    productCard.innerHTML = `
+        ${stockBadge}
+        <div class="product-name">${product.name || 'Unnamed Product'}</div>
+        <div class="product-price">₱${(product.price || 0).toFixed(2)}</div>
+        <div class="product-stock">Stock: ${product.stock || 0}</div>
+        ${sizeInfo}
+    `;
+    
+    if (hasStock) {
+        productCard.onclick = () => addToCart(product);
+    }
+    
+    return productCard;
+}
+
+// Helper function to get category color
+function getCategoryColor(color) {
+    switch(color) {
+        case 'blue': return '#3b82f6';
+        case 'green': return '#10b981';
+        case 'orange': return '#f59e0b';
+        case 'red': return '#ef4444';
+        case 'purple': return '#7c3aed';
+        case 'pink': return '#db2777';
+        default: return '#3b82f6';
+    }
+}
+
+// Filter products by category
+function filterByCategory(categoryId) {
+    currentCategory = categoryId;
+    document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    const activeTab = document.querySelector(`.category-tab[data-category="${categoryId}"]`);
+    if (activeTab) {
+        activeTab.classList.add('active');
+    }
+    
+    loadProducts();
+}
+
+// Cart functionality
+function loadCart() {
+    const cartItems = document.getElementById('cartItems');
+    if (!cartItems) return;
+    
+    cartItems.innerHTML = '';
+    
+    if (cart.length === 0) {
+        cartItems.innerHTML = '<div class="text-center" style="color: var(--secondary); padding: 40px;">Cart is empty</div>';
+        return;
+    }
+    
+    cart.forEach((item, index) => {
+        const product = products.find(p => p.id === item.originalProductId || p.id === item.productId);
+        const displayName = item.displayName || (product ? product.name : 'Unknown Product');
+        
+        const cartItem = document.createElement('div');
+        cartItem.className = 'cart-item';
+        cartItem.innerHTML = `
+            <div class="cart-item-info">
+                <div class="cart-item-name">${displayName}</div>
+                <div class="cart-item-price">₱${(item.price || 0).toFixed(2)} × ${item.quantity}</div>
+            </div>
+            <div class="cart-item-quantity">
+                <button class="quantity-btn" onclick="updateQuantity(${index}, -1)">-</button>
+                <span>${item.quantity}</span>
+                <button class="quantity-btn" onclick="updateQuantity(${index}, 1)">+</button>
+                <button class="remove-btn" onclick="removeFromCart(${index})">🗑️</button>
+            </div>
+        `;
+        cartItems.appendChild(cartItem);
+    });
+}
+
+// UPDATED FUNCTION to handle sizes
+function updateQuantity(index, change) {
+    const item = cart[index];
+    const product = products.find(p => p.id === item.originalProductId || p.id === item.productId);
+    
+    if (!product) return;
+    let availableStock = product.stock;
+    if (item.size && product.sizeStocks && product.sizeStocks[item.size] !== undefined) {
+        availableStock = product.sizeStocks[item.size];
+    }
+    
+    const newQuantity = item.quantity + change;
+    
+    if (newQuantity < 1) {
+        removeFromCart(index);
+        return;
+    }
+    
+    if (newQuantity > availableStock) {
+        showNotification('Warning', `Only ${availableStock} items available in stock!`, 'warning');
+        return;
+    }
+    
+    item.quantity = newQuantity;
+    saveCart();
+    updateCartDisplay();
+}
 
 function removeFromCart(index) {
-// ... (No change here)
-        const product = products.find(p => p.id === cart[index].productId || p.id === cart[index].originalProductId);
-        cart.splice(index, 1);
-        saveCart();
-        updateCartDisplay();
-        
-        if (product) {
-            showNotification('Cart Updated', `${product.name} removed from cart`, 'info', 1000);
-        }
+    const product = products.find(p => p.id === cart[index].productId || p.id === cart[index].originalProductId);
+    cart.splice(index, 1);
+    saveCart();
+    updateCartDisplay();
+    
+    if (product) {
+        showNotification('Cart Updated', `${product.name} removed from cart`, 'info', 1000);
     }
+}
 
 function clearCart() {
-// ... (No change here)
-        if (cart.length === 0) return;
-        
-        if (confirm('Clear all items from cart?')) {
-            cart = [];
-            selectedDiscount = { type: 'none', amount: 0 };
-            saveCart();
-            updateCartDisplay();
-            resetDiscountButtons();
-            showNotification('Cart Cleared', 'All items removed from cart', 'info');
-        }
+    if (cart.length === 0) return;
+    
+    if (confirm('Clear all items from cart?')) {
+        cart = [];
+        selectedDiscount = { type: 'none', amount: 0 };
+        saveCart();
+        updateCartDisplay();
+        resetDiscountButtons();
+        showNotification('Cart Cleared', 'All items removed from cart', 'info');
     }
+}
 
 function saveCart() {
-// ... (No change here)
-        localStorage.setItem('cart', JSON.stringify(cart));
-    }
+    localStorage.setItem('cart', JSON.stringify(cart));
+}
 
 function updateCartDisplay() {
-// ... (No change here)
-        loadCart();
-        
-        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        let discountAmount = 0;
-        
-        if (selectedDiscount.type === 'senior' || selectedDiscount.type === 'pwd') {
-            discountAmount = subtotal * 0.20;
-        }
-        
-        const total = subtotal - discountAmount;
-        
-        document.getElementById('subtotal').textContent = `₱${subtotal.toFixed(2)}`;
-        document.getElementById('total').textContent = `₱${total.toFixed(2)}`;
-        
-        const discountRow = document.getElementById('discountRow');
-        const discountAmountSpan = document.getElementById('discountAmount');
-        
-        if (discountAmount > 0) {
-            discountRow.style.display = 'flex';
-            discountAmountSpan.textContent = `-₱${discountAmount.toFixed(2)}`;
-            discountAmountSpan.style.color = 'var(--success)';
-        } else {
-            discountRow.style.display = 'none';
-        }
+    loadCart();
+    
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let discountAmount = 0;
+    
+    if (selectedDiscount.type === 'senior' || selectedDiscount.type === 'pwd') {
+        discountAmount = subtotal * 0.20;
     }
+    
+    const total = subtotal - discountAmount;
+    
+    document.getElementById('subtotal').textContent = `₱${subtotal.toFixed(2)}`;
+    document.getElementById('total').textContent = `₱${total.toFixed(2)}`;
+    
+    const discountRow = document.getElementById('discountRow');
+    const discountAmountSpan = document.getElementById('discountAmount');
+    
+    if (discountAmount > 0) {
+        discountRow.style.display = 'flex';
+        discountAmountSpan.textContent = `-₱${discountAmount.toFixed(2)}`;
+        discountAmountSpan.style.color = 'var(--success)';
+    } else {
+        discountRow.style.display = 'none';
+    }
+}
 
 // Discount application
 function applyDiscount(type) {
-// ... (No change here)
-        selectedDiscount.type = type;
-        
-        document.querySelectorAll('.discount-btn').forEach(btn => {
-            if (btn.dataset.type === type) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-        
-        updateCartDisplay();
-    }
+    selectedDiscount.type = type;
+    
+    document.querySelectorAll('.discount-btn').forEach(btn => {
+        if (btn.dataset.type === type) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    updateCartDisplay();
+}
 
 function resetDiscountButtons() {
-// ... (No change here)
-        selectedDiscount = { type: 'none', amount: 0 };
-        document.querySelectorAll('.discount-btn').forEach(btn => {
-            if (btn.dataset.type === 'none') {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-    }
+    selectedDiscount = { type: 'none', amount: 0 };
+    document.querySelectorAll('.discount-btn').forEach(btn => {
+        if (btn.dataset.type === 'none') {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+}
 
 // Payment Modal functionality
 function openPaymentModal() {
-// ... (No change here)
-        if (cart.length === 0) {
-            showNotification('Error', 'Cart is empty!', 'error');
-            return;
-        }
-
-        const total = calculateTotal();
-        document.getElementById('paymentTotal').textContent = `₱${total.toFixed(2)}`;
-        document.getElementById('multiPaymentTotal').textContent = `₱${total.toFixed(2)}`;
-        document.getElementById('paymentActionButtons').style.display = 'none';
-        document.getElementById('paymentModalTitle').textContent = 'Payment Method';
-        document.getElementById('paymentMethodSelection').style.display = 'block';
-        document.getElementById('singlePaymentSection').style.display = 'none';
-        document.getElementById('multiPaymentSection').style.display = 'none';
-        document.getElementById('processPaymentBtn').disabled = true;
-        document.getElementById('paymentModal').style.display = 'flex';
+    if (cart.length === 0) {
+        showNotification('Error', 'Cart is empty!', 'error');
+        return;
     }
 
+    const total = calculateTotal();
+    document.getElementById('paymentTotal').textContent = `₱${total.toFixed(2)}`;
+    document.getElementById('multiPaymentTotal').textContent = `₱${total.toFixed(2)}`;
+    document.getElementById('paymentActionButtons').style.display = 'none';
+    document.getElementById('paymentModalTitle').textContent = 'Payment Method';
+    document.getElementById('paymentMethodSelection').style.display = 'block';
+    document.getElementById('singlePaymentSection').style.display = 'none';
+    document.getElementById('multiPaymentSection').style.display = 'none';
+    document.getElementById('processPaymentBtn').disabled = true;
+    document.getElementById('paymentModal').style.display = 'flex';
+}
+
 function selectPaymentOption(method) {
-// ... (No change here)
     const titleElement = document.getElementById('paymentModalTitle');
     
     if (method === 'cash') {
@@ -570,35 +557,33 @@ function selectPaymentOption(method) {
 
 // Function back method (Back Button)
 function backToPaymentSelection() {
-// ... (No change here)
-        selectedPaymentMethod = null;
-        paymentAmounts = { cash: 0, gcash: 0 };
-        document.getElementById('paymentModalTitle').textContent = 'Payment Method';
-        selectedPaymentMethod = null;
-        
-        document.getElementById('singlePaymentAmount').value = '';
-        document.getElementById('multiCashAmount').value = '';
-        document.getElementById('multiGcashAmount').value = '';
+    selectedPaymentMethod = null;
+    paymentAmounts = { cash: 0, gcash: 0 };
+    document.getElementById('paymentModalTitle').textContent = 'Payment Method';
+    selectedPaymentMethod = null;
+    
+    document.getElementById('singlePaymentAmount').value = '';
+    document.getElementById('multiCashAmount').value = '';
+    document.getElementById('multiGcashAmount').value = '';
 
-        updateMultiPayment();
-        
-        document.getElementById('singlePaymentPaid').textContent = '₱0.00';
-        document.getElementById('singlePaymentChange').textContent = '₱0.00';
-        document.getElementById('multiTotalPaid').textContent = '₱0.00';
-        document.getElementById('multiPaymentRemaining').textContent = '₱0.00';
+    updateMultiPayment();
+    
+    document.getElementById('singlePaymentPaid').textContent = '₱0.00';
+    document.getElementById('singlePaymentChange').textContent = '₱0.00';
+    document.getElementById('multiTotalPaid').textContent = '₱0.00';
+    document.getElementById('multiPaymentRemaining').textContent = '₱0.00';
 
-        document.getElementById('paymentMethodSelection').style.display = 'block';
-        document.getElementById('singlePaymentSection').style.display = 'none';
-        document.getElementById('multiPaymentSection').style.display = 'none';
-        
-        document.getElementById('processPaymentBtn').disabled = true;
-        document.getElementById('paymentActionButtons').style.display = 'none';
-        document.getElementById('processPaymentBtn').disabled = true;
-    }
+    document.getElementById('paymentMethodSelection').style.display = 'block';
+    document.getElementById('singlePaymentSection').style.display = 'none';
+    document.getElementById('multiPaymentSection').style.display = 'none';
+    
+    document.getElementById('processPaymentBtn').disabled = true;
+    document.getElementById('paymentActionButtons').style.display = 'none';
+    document.getElementById('processPaymentBtn').disabled = true;
+}
 
 //updateSinglePayment
 function updateSinglePayment() {
-// ... (No change here)
     const amount = parseFloat(document.getElementById('singlePaymentAmount').value) || 0;
     const total = calculateTotal();
     
@@ -623,7 +608,6 @@ function updateSinglePayment() {
 
 //updateMultiPayment
 function updateMultiPayment() {
-// ... (No change here)
     const cashAmount = Math.max(0, parseFloat(document.getElementById('multiCashAmount').value) || 0);
     const gcashAmount = Math.max(0, parseFloat(document.getElementById('multiGcashAmount').value) || 0);
     const total = calculateTotal();
@@ -632,23 +616,19 @@ function updateMultiPayment() {
     paymentAmounts.gcash = gcashAmount;
     
     const totalPaid = cashAmount + gcashAmount;
-    const remaining = totalPaid - total; // Positive kung Change, Negative kung Kulang
+    const remaining = totalPaid - total; 
 
     document.getElementById('multiTotalPaid').textContent = `₱${totalPaid.toFixed(2)}`;
     
     const remainingElement = document.getElementById('multiPaymentRemaining');
-    // Clear previous color styles
     remainingElement.style.color = '';
     
     if (remaining < 0) {
-        // Kulang pa: Display as positive value with INSUFFICIENT label
         remainingElement.style.color = 'var(--danger)'; 
         remainingElement.innerHTML = `₱${Math.abs(remaining).toFixed(2)} <small style="color: var(--danger);">(Insufficient)</small>`;
     } else {
-        // Sakto o sobra (Change)
         remainingElement.style.color = remaining > 0 ? 'var(--primary)' : 'var(--success)';
         
-        // Tanggalin ang small tag na may 'Paid' / 'Change' text para mas malinis
         remainingElement.textContent = `₱${remaining.toFixed(2)}`; 
     }
     
@@ -657,7 +637,6 @@ function updateMultiPayment() {
 
 //updateProcessButton
 function updateProcessButton() {
-// ... (No change here)
     const total = calculateTotal();
     let totalPaid = 0;
     
@@ -684,20 +663,195 @@ function updateProcessButton() {
 }
 
 function calculateTotal() {
-// ... (No change here)
-        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        let discountAmount = 0;
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let discountAmount = 0;
+    
+    if (selectedDiscount.type === 'senior' || selectedDiscount.type === 'pwd') {
+        discountAmount = subtotal * 0.20;
+    }
+    
+    return subtotal - discountAmount;
+}
+
+// NEW FUNCTION: Tries to print using Web Bluetooth API
+async function bluetoothPrint(rawReceipt) {
+    
+    if (!navigator.bluetooth) {
+        showErrorAlert("Bluetooth Error", "Web Bluetooth API is not supported. Printing via standard dialog.");
+        printReceiptStandard(); 
+        return;
+    }
+
+    try {
+        showNotification("Bluetooth Print", "Searching for thermal printer...", 'info', 0);
         
-        if (selectedDiscount.type === 'senior' || selectedDiscount.type === 'pwd') {
-            discountAmount = subtotal * 0.20;
+        // NOTE: YOU MUST CHANGE THE UUIDS BELOW TO MATCH YOUR PRINTER'S SERVICE AND CHARACTERISTIC
+        const device = await navigator.bluetooth.requestDevice({
+            filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }], 
+            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', '49535343-fe7d-4ae5-8fa9-9fafd205e455'] 
+        });
+
+        const server = await device.gatt.connect();
+
+        // Use the correct Service UUID
+        const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb'); 
+        
+        // Use the correct Characteristic UUID for writing data
+        const characteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb'); 
+
+        const encoder = new TextEncoder();
+        const data = encoder.encode(rawReceipt);
+
+        // Send in chunks (important for stability)
+        const CHUNK_SIZE = 512;
+        for (let i = 0; i < data.length; i += CHUNK_SIZE) {
+            const chunk = data.slice(i, i + CHUNK_SIZE);
+            await characteristic.writeValue(chunk);
         }
         
-        return subtotal - discountAmount;
+        showNotification("Success", "Print job sent successfully via Bluetooth!", 'success', 3000);
+        
+    } catch (error) {
+        showErrorAlert("Bluetooth Print Failed", "Error connecting or sending data. Check printer connection. Details: " + error.message);
+        console.error("Bluetooth print error:", error);
+        // Fallback to standard print dialog
+        printReceiptStandard();
     }
+}
+
+// NEW FUNCTION: Generates simple ESC/POS compatible text
+function generateRawReceipt(saleData) {
+    const shopName = shopInfo.name || 'POS Shop';
+    const shopAddress = shopInfo.address || '';
+    const shopFooter = shopInfo.receiptFooter || 'Thank you!';
+    const queueNumber = lastQueueNumber.toString().padStart(3, '0');
+    const date = new Date(saleData.timestamp).toLocaleString();
+    const total = saleData.total.toFixed(2);
+
+    let receipt = INIT;
+    
+    // Header
+    receipt += CENTER + BOLD_ON + shopName + BOLD_OFF + LINE_FEED;
+    receipt += CENTER + shopAddress + LINE_FEED;
+    receipt += CENTER + `Ref: #${saleData.id}` + LINE_FEED;
+    receipt += CENTER + date + LINE_FEED + LINE_FEED;
+    
+    // Items
+    receipt += LEFT + 'QTY ITEM                        TOTAL' + LINE_FEED;
+    receipt += '--------------------------------' + LINE_FEED;
+
+    saleData.items.forEach(item => {
+        const product = products.find(p => p.id === item.productId);
+        const name = product ? product.name : 'Unknown Product';
+        const itemTotal = (item.price * item.quantity).toFixed(2);
+        const details = item.size ? `(${item.size})` : '';
+        const line = `${item.quantity} ${name} ${details}`;
+        
+        receipt += LEFT + line.padEnd(28, ' ').substring(0, 28) + itemTotal.padStart(4, ' ') + LINE_FEED;
+    });
+
+    // Totals
+    receipt += '--------------------------------' + LINE_FEED;
+    receipt += BOLD_ON + `TOTAL: ${total.padStart(25, ' ')}` + BOLD_ON + LINE_FEED;
+    receipt += '--------------------------------' + LINE_FEED + LINE_FEED;
+
+    // Queue Number
+    receipt += CENTER + 'Queue Number' + LINE_FEED;
+    receipt += CENTER + BOLD_ON + `### ${queueNumber}` + BOLD_OFF + LINE_FEED + LINE_FEED;
+    
+    // Footer
+    receipt += CENTER + shopFooter + LINE_FEED;
+    receipt += CENTER + 'THANK YOU!' + LINE_FEED + LINE_FEED;
+    
+    // Commands to cut paper
+    receipt += LINE_FEED + LINE_FEED + CUT; 
+
+    return receipt;
+}
+
+
+// OVERWRITE THE ORIGINAL printReceipt function in pos.js
+function printReceipt() {
+    // If Web Bluetooth is available and we have sale data, try the dedicated thermal printer function
+    if (navigator.bluetooth && window.lastProcessedSaleData) {
+        const rawReceipt = generateRawReceipt(window.lastProcessedSaleData);
+        bluetoothPrint(rawReceipt);
+        return;
+    }
+    
+    // Fallback to standard browser print
+    printReceiptStandard();
+}
+
+// NEW FUNCTION: Standard Print Fallback
+function printReceiptStandard() {
+    const receiptElement = document.querySelector('.modern-receipt');
+    if (!receiptElement) {
+        console.error('Receipt element not found for standard print.');
+        return;
+    }
+    
+    // Use existing modern-receipt content for standard print dialog
+    const receiptContent = receiptElement.outerHTML;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <title>Print Receipt</title>
+                <style>
+                    body { 
+                        font-family: 'Courier New', monospace; 
+                        margin: 0; 
+                        padding: 0;
+                        font-size: 12px;
+                        line-height: 1.3;
+                        background: white;
+                    }
+                    @media print {
+                        body { margin: 0; padding: 0; }
+                        .modern-receipt { 
+                            width: 80mm !important; 
+                            margin: 0 !important;
+                            padding: 10px !important;
+                            box-shadow: none !important;
+                            font-size: 11px !important;
+                        }
+                    }
+                    .modern-receipt { 
+                        width: 80mm;
+                        margin: 0 auto;
+                        padding: 15px;
+                        background: white;
+                    }
+                    .receipt-header { text-align: center; margin-bottom: 10px; }
+                    .receipt-shop-name { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+                    .receipt-address { font-size: 10px; color: #666; }
+                    .receipt-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 10px; }
+                    .receipt-divider { border-bottom: 1px dashed #000; margin: 10px 0; }
+                    .receipt-section-title { font-weight: bold; font-size: 12px; margin-bottom: 5px; }
+                    .receipt-item { margin-bottom: 5px; }
+                    .receipt-item-main { display: flex; justify-content: space-between; font-weight: bold; }
+                    .receipt-item-sub { display: flex; justify-content: space-between; color: #666; font-size: 10px; }
+                    .receipt-total-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+                    .receipt-grand-total { font-weight: bold; font-size: 14px; margin-top: 5px; }
+                    .receipt-payment-method { display: flex; justify-content: space-between; margin-bottom: 5px; }
+                    .receipt-payment-row { display: flex; justify-content: space-between; font-size: 11px; }
+                    .receipt-footer { text-align: center; font-size: 10px; color: #666; margin-top: 15px; }
+                </style>
+            </head>
+            <body onload="window.print(); setTimeout(() => window.close(), 500);">
+                ${receiptContent}
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
+
 
 // UPDATED PROCESS PAYMENT (Saves Correct Change)
 function processPayment() {
-// ... (No change here)
     console.log('=== PROCESS PAYMENT STARTED ===');
     
     if (cart.length === 0) {
@@ -744,6 +898,8 @@ function processPayment() {
             // Add to queue
             addToQueue(sale);
             
+            window.lastProcessedSaleData = sale; // NEW: Store sale data globally
+            
             showReceipt(sale);
             
             cart = [];
@@ -767,35 +923,33 @@ function processPayment() {
 
 // Close Payment Modal
 function closePaymentModal() {
-// ... (No change here)
-        console.log('Closing payment modal...');
-        
-        selectedPaymentMethod = null;
-        paymentAmounts = { cash: 0, gcash: 0 };
-        
-        document.getElementById('singlePaymentAmount').value = '';
-        document.getElementById('multiCashAmount').value = '';
-        document.getElementById('multiGcashAmount').value = '';
-        
-        document.getElementById('singlePaymentPaid').textContent = '₱0.00';
-        document.getElementById('singlePaymentChange').textContent = '₱0.00';
-        document.getElementById('multiTotalPaid').textContent = '₱0.00';
-        document.getElementById('multiPaymentRemaining').textContent = '₱0.00';
-        
-        document.getElementById('paymentModalTitle').textContent = 'Payment Method';
-        document.getElementById('paymentMethodSelection').style.display = 'block';
-        document.getElementById('singlePaymentSection').style.display = 'none';
-        document.getElementById('multiPaymentSection').style.display = 'none';
-        document.getElementById('processPaymentBtn').disabled = true;
-        
-        document.getElementById('paymentModal').style.display = 'none';
-        
-        console.log('Payment modal closed');
-    }
+    console.log('Closing payment modal...');
+    
+    selectedPaymentMethod = null;
+    paymentAmounts = { cash: 0, gcash: 0 };
+    
+    document.getElementById('singlePaymentAmount').value = '';
+    document.getElementById('multiCashAmount').value = '';
+    document.getElementById('multiGcashAmount').value = '';
+    
+    document.getElementById('singlePaymentPaid').textContent = '₱0.00';
+    document.getElementById('singlePaymentChange').textContent = '₱0.00';
+    document.getElementById('multiTotalPaid').textContent = '₱0.00';
+    document.getElementById('multiPaymentRemaining').textContent = '₱0.00';
+    
+    document.getElementById('paymentModalTitle').textContent = 'Payment Method';
+    document.getElementById('paymentMethodSelection').style.display = 'block';
+    document.getElementById('singlePaymentSection').style.display = 'none';
+    document.getElementById('multiPaymentSection').style.display = 'none';
+    document.getElementById('processPaymentBtn').disabled = true;
+    
+    document.getElementById('paymentModal').style.display = 'none';
+    
+    console.log('Payment modal closed');
+}
 
 // UPDATED: updateQueueDisplay to target navbar button and new modal
 function updateQueueDisplay() {
-// ... (No change here)
     const queueNavCount = document.getElementById('queueNavCount');
     const queueModalCount = document.getElementById('queueModalCount');
     const queueItemsModal = document.getElementById('queueItemsModal');
@@ -837,98 +991,24 @@ function updateQueueDisplay() {
 }
 
 function completeOrder(queueNumber) {
-// ... (No change here)
     if (completeQueueItem(queueNumber)) {
         updateQueueDisplay();
         showNotification('Success', `Order #${queueNumber} completed!`, 'success');
     }
 }
 
-// Update the processPayment function to add to queue
-function processPayment() {
-// ... (No change here)
-    console.log('=== PROCESS PAYMENT STARTED ===');
-    
-    if (cart.length === 0) {
-        showNotification('Error', 'Cart is empty! Please add items first.', 'error');
-        return;
-    }
-    
-    const total = calculateTotal();
-    
-    if (!selectedPaymentMethod) {
-        showNotification('Error', 'Please select a payment method!', 'error');
-        return;
-    }
-    
-    let totalPaid = 0;
-    if (selectedPaymentMethod === 'multi') {
-        totalPaid = paymentAmounts.cash + paymentAmounts.gcash;
-    } else {
-        totalPaid = selectedPaymentMethod === 'cash' ? paymentAmounts.cash : paymentAmounts.gcash;
-    }
-    
-    const change = Math.max(0, totalPaid - total);
-    
-    const saleData = {
-        items: cart.map(item => ({
-            productId: item.originalProductId || item.productId,
-            quantity: item.quantity,
-            price: item.price,
-            size: item.size
-        })),
-        subtotal: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-        discount: selectedDiscount.type !== 'none' ? total * 0.20 : 0,
-        discountType: selectedDiscount.type,
-        total: total,
-        paymentMethod: selectedPaymentMethod,
-        paymentAmounts: { ...paymentAmounts },
-        change: change
-    };
-    
-    try {
-        const sale = addSale(saleData);
-        
-        if (sale) {
-            // Add to queue
-            addToQueue(sale);
-            
-            showReceipt(sale);
-            
-            cart = [];
-            selectedDiscount = { type: 'none', amount: 0 };
-            saveCart();
-            updateCartDisplay();
-            updateQueueDisplay(); // Update queue display
-            resetDiscountButtons();
-            loadProducts();
-            
-            closePaymentModal();
-            showNotification('Success', `Payment processed! Queue #${lastQueueNumber}`, 'success');
-        } else {
-            showNotification('Error', 'Failed to process payment! Please try again.', 'error');
-        }
-    } catch (error) {
-        console.error('Payment error:', error);
-        showNotification('Error', 'System error: ' + error.message, 'error');
-    }
-}
-
 // New: Queue Modal Functions
 function openQueueModal() {
-// ... (No change here)
     updateQueueDisplay(); // Always update before opening
     document.getElementById('queueModal').style.display = 'flex';
 }
 
 function closeQueueModal() {
-// ... (No change here)
     document.getElementById('queueModal').style.display = 'none';
 }
 
 // Update receipt to show queue number instead of barcode
 function showReceipt(saleData) {
-// ... (No change here)
     const receiptContent = document.getElementById('receiptContent');
     
     let itemsHTML = '';
@@ -1073,115 +1153,43 @@ function showReceipt(saleData) {
 }
 
 function closeReceiptModal() {
-// ... (No change here)
-        document.getElementById('receiptModal').style.display = 'none';
-    }
-
-function printReceipt() {
-// ... (No change here)
-        const receiptElement = document.querySelector('.modern-receipt');
-        if (!receiptElement) {
-            console.error('Receipt element not found');
-            return;
-        }
-        
-        const receiptContent = receiptElement.outerHTML;
-        
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <title>Print Receipt</title>
-                    <style>
-                        body { 
-                            font-family: 'Courier New', monospace; 
-                            margin: 0; 
-                            padding: 0;
-                            font-size: 12px;
-                            line-height: 1.3;
-                            background: white;
-                        }
-                        @media print {
-                            body { margin: 0; padding: 0; }
-                            .modern-receipt { 
-                                width: 80mm !important; 
-                                margin: 0 !important;
-                                padding: 10px !important;
-                                box-shadow: none !important;
-                                font-size: 11px !important;
-                            }
-                        }
-                        .modern-receipt { 
-                            width: 80mm;
-                            margin: 0 auto;
-                            padding: 15px;
-                            background: white;
-                        }
-                        .receipt-header { text-align: center; margin-bottom: 10px; }
-                        .receipt-shop-name { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
-                        .receipt-address { font-size: 10px; color: #666; }
-                        .receipt-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 10px; }
-                        .receipt-divider { border-bottom: 1px dashed #000; margin: 10px 0; }
-                        .receipt-section-title { font-weight: bold; font-size: 12px; margin-bottom: 5px; }
-                        .receipt-item { margin-bottom: 5px; }
-                        .receipt-item-main { display: flex; justify-content: space-between; font-weight: bold; }
-                        .receipt-item-sub { display: flex; justify-content: space-between; color: #666; font-size: 10px; }
-                        .receipt-total-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
-                        .receipt-grand-total { font-weight: bold; font-size: 14px; margin-top: 5px; }
-                        .receipt-payment-method { display: flex; justify-content: space-between; margin-bottom: 5px; }
-                        .receipt-payment-row { display: flex; justify-content: space-between; font-size: 11px; }
-                        .receipt-footer { text-align: center; font-size: 10px; color: #666; margin-top: 15px; }
-                        .receipt-barcode { display: flex; justify-content: center; gap: 2px; margin-top: 10px; }
-                        .barcode-line { width: 2px; height: 30px; background: black; }
-                        .barcode-line.short { height: 20px; }
-                    </style>
-                </head>
-                <body onload="window.print(); setTimeout(() => window.close(), 500);">
-                    ${receiptContent}
-                </body>
-            </html>
-        `);
-        printWindow.document.close();
-    }
+    document.getElementById('receiptModal').style.display = 'none';
+}
 
 // Login Modal functionality 
 function openLoginModal() {
-// ... (No change here)
-        console.log('Opening login modal...');
-        document.getElementById('loginModal').style.display = 'flex';
-        document.body.classList.add('modal-open'); 
-        const loginBtn = document.querySelector('#loginModal .btn-primary');
-        if (loginBtn) {
-            loginBtn.onclick = handleLogin;
-            loginBtn.style.pointerEvents = 'auto';
-            loginBtn.style.cursor = 'pointer';
-        }
+    console.log('Opening login modal...');
+    document.getElementById('loginModal').style.display = 'flex';
+    document.body.classList.add('modal-open'); 
+    const loginBtn = document.querySelector('#loginModal .btn-primary');
+    if (loginBtn) {
+        loginBtn.onclick = handleLogin;
+        loginBtn.style.pointerEvents = 'auto';
+        loginBtn.style.cursor = 'pointer';
     }
+}
 
 function closeLoginModal() {
-// ... (No change here)
-        document.getElementById('loginModal').style.display = 'none';
-        document.body.classList.remove('modal-open'); 
-    }
+    document.getElementById('loginModal').style.display = 'none';
+    document.body.classList.remove('modal-open'); 
+}
 
 function handleLogin() {
-// ... (No change here)
-        console.log('✅ LOGIN BUTTON CLICKED!');
+    console.log('✅ LOGIN BUTTON CLICKED!');
+    
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    if (typeof loginUser === 'function' && loginUser(email, password)) {
+        showNotification('Success', 'Login successful!', 'success');
+        closeLoginModal();
         
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-        if (typeof loginUser === 'function' && loginUser(email, password)) {
-            showNotification('Success', 'Login successful!', 'success');
-            closeLoginModal();
-            
-            setTimeout(() => {
-                window.location.href = 'inventory.html';
-            }, 1000);
-        } else {
-            showNotification('Error', 'Invalid email or password!', 'error');
-        }
+        setTimeout(() => {
+            window.location.href = 'inventory.html';
+        }, 1000);
+    } else {
+        showNotification('Error', 'Invalid email or password!', 'error');
     }
+}
 function openOrderDetailsModal(queueNumber) {
     // FIX: Close the Queue Modal when opening Order Details Modal
     closeQueueModal(); 
@@ -1231,7 +1239,6 @@ function openOrderDetailsModal(queueNumber) {
     document.getElementById('orderDetailsModal').style.display = 'flex';
 }
 function closeOrderDetailsModal() {
-// ... (No change here)
     document.getElementById('orderDetailsModal').style.display = 'none';
 }
 // Initialize when page loads
