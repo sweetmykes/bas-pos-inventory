@@ -1471,20 +1471,24 @@ select.form-input {
     z-index: 10;
 }
 
+/* ==================== */
+/* 58MM RECEIPT STYLES - FULL WIDTH */
+/* ==================== */
+
+/* 58mm Thermal Printer Receipt Styles - FULL WIDTH */
 .modern-receipt {
     width: 58mm !important;
     max-width: 58mm !important;
     min-width: 58mm !important;
     background: white;
-    padding: 2px !important; /* REDUCED PADDING */
+    padding: 2px !important; /* MINIMAL PADDING */
     font-family: 'Courier New', monospace;
     line-height: 1.1 !important;
     color: #000;
     margin: 0 auto;
-    box-sizing: border-box;
 }
 
-/* REMOVE ALL SIDE PADDING/MARGINS */
+/* FULL WIDTH UTILIZATION - REMOVE SIDE PADDING */
 .receipt-header,
 .receipt-info,
 .receipt-items,
@@ -1492,57 +1496,53 @@ select.form-input {
 .receipt-totals,
 .receipt-payment,
 .receipt-footer {
-    padding-left: 1px !important;
-    padding-right: 1px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
-    width: 100% !important;
-    box-sizing: border-box;
 }
 
-/* LARGER FONT SIZES - FULL WIDTH */
+/* Base font sizes - FULL WIDTH */
 .receipt-shop-name {
-    font-size: 16px !important; /* INCREASED AGAIN */
+    font-size: 14px !important;
     font-weight: bold;
     margin-bottom: 2px;
     text-transform: uppercase;
     line-height: 1.1;
     word-wrap: break-word;
     text-align: center;
-    padding: 0 1px !important;
     width: 100% !important;
 }
 
 /* Adaptive sizing for long business names */
 .receipt-shop-name.medium-long {
-    font-size: 15px !important;
-}
-
-.receipt-shop-name.very-long {
-    font-size: 14px !important;
-}
-
-.receipt-shop-name.extremely-long {
     font-size: 13px !important;
 }
 
+.receipt-shop-name.very-long {
+    font-size: 12px !important;
+}
+
+.receipt-shop-name.extremely-long {
+    font-size: 11px !important;
+}
+
 .receipt-address {
-    font-size: 13px !important; /* INCREASED AGAIN */
+    font-size: 11px !important;
     color: #666;
     line-height: 1.1;
     margin-bottom: 3px;
     word-wrap: break-word;
     text-align: center;
-    padding: 0 1px !important;
+    width: 100% !important;
 }
 
 .receipt-info {
     display: flex;
     justify-content: space-between;
     margin-bottom: 3px;
-    font-size: 13px !important; /* INCREASED AGAIN */
+    font-size: 11px !important;
     color: #666;
-    padding: 0 1px !important;
     width: 100% !important;
 }
 
@@ -1551,7 +1551,7 @@ select.form-input {
 }
 
 .receipt-divider {
-    border-bottom: 1px solid #000; /* SOLID LINE FOR BETTER VISIBILITY */
+    border-bottom: 1px solid #000; /* SOLID FOR BETTER VISIBILITY */
     margin: 3px 0;
     height: 1px;
     width: 100% !important;
@@ -1559,18 +1559,16 @@ select.form-input {
 
 .receipt-section-title {
     font-weight: bold;
-    font-size: 14px !important; /* INCREASED AGAIN */
+    font-size: 12px !important;
     margin-bottom: 3px;
     text-transform: uppercase;
     text-align: center;
-    padding: 0 1px !important;
     width: 100% !important;
 }
 
-/* Items Styling - FULL WIDTH & LARGER */
+/* Items Styling - FULL WIDTH */
 .receipt-items {
     margin-bottom: 3px;
-    padding: 0 1px !important;
     width: 100% !important;
 }
 
@@ -1590,24 +1588,22 @@ select.form-input {
 .receipt-item-name {
     flex: 1;
     font-weight: bold;
-    padding-right: 3px;
-    font-size: 13px !important; /* INCREASED AGAIN */
+    padding-right: 2px;
+    font-size: 12px !important;
     line-height: 1.1;
     word-wrap: break-word;
-    min-width: 0; /* ALLOW TEXT TO WRAP PROPERLY */
 }
 
 .receipt-item-qty {
     font-weight: bold;
     white-space: nowrap;
-    font-size: 13px !important; /* INCREASED AGAIN */
-    margin-left: 5px;
+    font-size: 12px !important;
 }
 
 .receipt-item-sub {
     display: flex;
     justify-content: space-between;
-    font-size: 12px !important; /* INCREASED AGAIN */
+    font-size: 11px !important;
     color: #666;
     margin-bottom: 1px;
     width: 100% !important;
@@ -1620,13 +1616,11 @@ select.form-input {
 .receipt-item-total {
     font-weight: bold;
     white-space: nowrap;
-    margin-left: 5px;
 }
 
-/* Totals Styling - LARGER & FULL WIDTH */
+/* Totals Styling - FULL WIDTH */
 .receipt-totals {
     margin-bottom: 3px;
-    padding: 0 1px !important;
     width: 100% !important;
 }
 
@@ -1634,12 +1628,12 @@ select.form-input {
     display: flex;
     justify-content: space-between;
     margin-bottom: 2px;
-    font-size: 13px !important; /* INCREASED AGAIN */
+    font-size: 12px !important;
     width: 100% !important;
 }
 
 .receipt-grand-total {
-    font-size: 15px !important; /* INCREASED AGAIN */
+    font-size: 14px !important;
     font-weight: bold;
     margin-top: 3px;
     padding-top: 3px;
@@ -1647,10 +1641,9 @@ select.form-input {
     width: 100% !important;
 }
 
-/* Payment Styling - LARGER & FULL WIDTH */
+/* Payment Styling - FULL WIDTH */
 .receipt-payment {
     margin-bottom: 3px;
-    padding: 0 1px !important;
     width: 100% !important;
 }
 
@@ -1659,20 +1652,20 @@ select.form-input {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 3px;
-    font-size: 13px !important; /* INCREASED AGAIN */
+    font-size: 12px !important;
     width: 100% !important;
 }
 
 .payment-method-badge {
-    padding: 3px 6px;
+    padding: 2px 6px;
     border-radius: 8px;
-    font-size: 11px !important; /* INCREASED AGAIN */
+    font-size: 10px !important;
     font-weight: bold;
     text-transform: uppercase;
 }
 
 .receipt-payment-methods {
-    font-size: 12px !important; /* INCREASED AGAIN */
+    font-size: 11px !important;
     width: 100% !important;
 }
 
@@ -1683,37 +1676,36 @@ select.form-input {
     width: 100% !important;
 }
 
-/* Footer Styling - LARGER & FULL WIDTH */
+/* Footer Styling - FULL WIDTH */
 .receipt-footer {
     text-align: center;
     margin-top: 5px;
-    padding: 0 1px !important;
     width: 100% !important;
 }
 
 .receipt-thankyou {
     font-weight: bold;
     margin-bottom: 2px;
-    font-size: 13px !important; /* INCREASED AGAIN */
+    font-size: 12px !important;
     line-height: 1.1;
     word-wrap: break-word;
 }
 
 .receipt-thankyou.long-footer {
-    font-size: 12px !important;
+    font-size: 11px !important;
 }
 
 .receipt-thankyou.very-long-footer {
-    font-size: 11px !important;
+    font-size: 10px !important;
 }
 
 .receipt-greeting {
     margin-bottom: 2px;
-    font-size: 12px !important; /* INCREASED AGAIN */
+    font-size: 11px !important;
     line-height: 1.1;
 }
 
-/* Queue Section - LARGER & FULL WIDTH */
+/* Queue Section - FULL WIDTH */
 .receipt-queue {
     text-align: center;
     margin: 5px 0;
@@ -1722,26 +1714,25 @@ select.form-input {
     border-radius: 3px;
     border: 2px dashed #3b82f6;
     width: 100% !important;
-    box-sizing: border-box;
 }
 
 .queue-number-large {
-    font-size: 18px !important; /* INCREASED AGAIN */
+    font-size: 16px !important;
     font-weight: bold;
     color: var(--primary);
     margin-bottom: 3px;
 }
 
 .queue-notice {
-    font-size: 12px !important; /* INCREASED AGAIN */
+    font-size: 11px !important;
     color: var(--secondary);
     font-style: italic;
     line-height: 1.1;
 }
 
-/* Notes Section - LARGER & FULL WIDTH */
+/* Notes Section - FULL WIDTH */
 .receipt-notes {
-    font-size: 12px !important; /* INCREASED AGAIN */
+    font-size: 11px !important;
     margin-top: 5px;
     padding: 5px;
     border-top: 1px dashed #ccc;
@@ -1749,17 +1740,18 @@ select.form-input {
     word-wrap: break-word;
     background: #fff5f5;
     width: 100% !important;
-    box-sizing: border-box;
 }
 
-/* FORCE FULL WIDTH ON ALL ELEMENTS */
-.receipt * {
-    box-sizing: border-box;
-    max-width: 100% !important;
-}
-
-/* Print Styles for 58mm - TRUE FULL WIDTH */
+/* Print Styles for 58mm - TRUE FULL WIDTH & REMOVE UI ELEMENTS */
 @media print {
+    /* REMOVE MODAL HEADER, BUTTONS, AND OTHER UI ELEMENTS */
+    .modal-header,
+    .close-btn,
+    .form-actions,
+    .no-print {
+        display: none !important;
+    }
+    
     body {
         margin: 0 !important;
         padding: 0 !important;
@@ -1776,17 +1768,6 @@ select.form-input {
         box-shadow: none !important;
         border: none !important;
         background: white !important;
-    }
-    
-    .no-print {
-        display: none !important;
-    }
-    
-    /* Remove any borders that might cause spacing */
-    .receipt-header,
-    .receipt-queue,
-    .receipt-divider {
-        border: none !important;
     }
     
     /* Ensure full width utilization */
@@ -1811,7 +1792,7 @@ select.form-input {
     }
 }
 
-/* Fix for receipt modal display - TRUE FULL WIDTH */
+/* Fix for receipt modal display - MINIMAL PADDING */
 #receiptModal .modal-content {
     max-width: 58mm;
     padding: 2px; /* MINIMAL PADDING */
