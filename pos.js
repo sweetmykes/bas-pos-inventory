@@ -867,6 +867,7 @@ function printReceiptStandard() {
 
 
 // UPDATED PROCESS PAYMENT (Saves Correct Change)
+// TANGGALIN ANG AUTO-PRINT SA PROCESS PAYMENT
 function processPayment() {
     console.log('=== PROCESS PAYMENT STARTED ===');
     
@@ -919,7 +920,7 @@ function processPayment() {
             
             window.lastProcessedSaleData = sale; // Store sale data globally
             
-            // IMPORTANT: Show receipt FIRST before printing
+            // IMPORTANT: Show receipt FIRST 
             showReceipt(sale);
             
             cart = [];
@@ -934,10 +935,8 @@ function processPayment() {
             closePaymentModal();
             showNotification('Success', `Payment processed! Queue #${lastQueueNumber}`, 'success');
             
-            // AUTO PRINT AFTER SHOWING RECEIPT
-            setTimeout(() => {
-                printReceiptStandard();
-            }, 500);
+            // TANGGALIN ANG AUTO-PRINT - MANUAL NA LANG
+            // WALANG setTimeout(() => { printReceiptStandard(); }, 500);
             
         } else {
             showNotification('Error', 'Failed to process payment! Please try again.', 'error');
@@ -946,6 +945,63 @@ function processPayment() {
         console.error('Payment error:', error);
         showNotification('Error', 'System error: ' + error.message, 'error');
     }
+}
+
+// SIMPLENG PRINT FUNCTION - WALANG COMPLICATION
+function printReceiptStandard() {
+    console.log('=== PRINT RECEIPT CALLED ===');
+    
+    // Gumamit ng VERY SIMPLE approach - direct print ng receipt content
+    const receiptElement = document.querySelector('.modern-receipt');
+    
+    if (!receiptElement) {
+        showErrorAlert('Print Error', 'No receipt found. Please generate receipt first.');
+        return;
+    }
+    
+    // Create a simple print window
+    const printWindow = window.open('', '_blank', 'width=350,height=600');
+    
+    if (!printWindow) {
+        // Fallback: print current window
+        window.print();
+        return;
+    }
+    
+    // VERY SIMPLE HTML - WALANG COMPLEX STYLING
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Receipt</title>
+            <style>
+                body { 
+                    font-family: 'Courier New', monospace;
+                    width: 80mm;
+                    margin: 0 auto;
+                    padding: 10px;
+                    font-size: 12px;
+                    line-height: 1.2;
+                }
+                @media print {
+                    body { margin: 0; padding: 10px; }
+                }
+            </style>
+        </head>
+        <body>
+            ${receiptElement.outerHTML}
+        </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    
+    // Print after short delay to ensure content loaded
+    setTimeout(() => {
+        printWindow.print();
+        // Optional: close after print
+        setTimeout(() => printWindow.close(), 500);
+    }, 100);
 }
 
 // Close Payment Modal
