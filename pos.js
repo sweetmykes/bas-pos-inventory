@@ -1,4 +1,4 @@
-// pos.js - FINAL STABLE PRINT VERSION
+// pos.js - FINAL WORKING PRINT VERSION
 
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 let currentCategory = 'all';
@@ -8,17 +8,6 @@ let paymentAmounts = { cash: 0, gcash: 0 };
 let selectedProductForSize = null;
 let sizeSelectionModal = null;
 window.lastProcessedSaleData = null; // Store sale data for print
-
-// ESC/POS Commands (Simplified) - Only used for RAW printing simulation
-const ESC = '\x1B';
-const GS = '\x1D';
-const INIT = `${ESC}@`;
-const BOLD_ON = `${ESC}E\x01`;
-const BOLD_OFF = `${ESC}E\x00`;
-const CENTER = `${ESC}a\x01`;
-const LEFT = `${ESC}a\x00`;
-const CUT = `${GS}V\x00`;
-const LINE_FEED = '\n';
 
 // Initialize POS
 function initPOS() {
@@ -41,6 +30,7 @@ function updatePOSBranding() {
         if (logoText) logoText.textContent = shopInfo.name + " POS";
     }
 }
+
 //HELPER: ANIMATION TRIGGER
 function triggerAnimation(element) {
     if (element) {
@@ -49,7 +39,6 @@ function triggerAnimation(element) {
         element.classList.add('animate-enter');
     }
 }
-
 
 // Create Size Selection Modal
 function createSizeSelectionModal() {
@@ -170,6 +159,7 @@ function addToCart(product) {
         addProductToCartDirectly(product, null);
     }
 }
+
 function updatePOSTitle() {
     const posTitle = document.getElementById('posTitle');
     if (posTitle && typeof shopInfo !== 'undefined') {
@@ -274,8 +264,7 @@ function loadProducts() {
         });
     }
 }
-
-// Create product card - OPTIMIZED SIZE
+//CreateProductCard
 function createProductCard(product, category) {
     const productCard = document.createElement('div');
     productCard.className = `product-card ${category?.color || 'blue'}`;
@@ -296,16 +285,20 @@ function createProductCard(product, category) {
     } else if (product.stock <= 5) {
         stockBadge = `<div class="stock-badge">${product.stock}</div>`;
     }
+    
     let sizeInfo = '';
+    let priceDisplay = '';
     if (category?.color === 'blue' && product.sizePrices && Object.keys(product.sizePrices).length > 0) {
         const sizes = Object.keys(product.sizePrices);
         sizeInfo = `<div class="product-size">${sizes.join('/')}</div>`;
+    } else {
+        priceDisplay = `<div class="product-price">₱${(product.price || 0).toFixed(2)}</div>`;
     }
     
     productCard.innerHTML = `
         ${stockBadge}
         <div class="product-name">${product.name || 'Unnamed Product'}</div>
-        <div class="product-price">₱${(product.price || 0).toFixed(2)}</div>
+        ${priceDisplay}
         <div class="product-stock">Stock: ${product.stock || 0}</div>
         ${sizeInfo}
     `;
@@ -539,18 +532,18 @@ function selectPaymentOption(method) {
         document.getElementById('singlePaymentAmount').oninput = updateSinglePayment;
         
     } else if (method === 'multi') {
-        document.getElementById('multiPaymentSection').style.display = 'block';
-        document.getElementById('multiCashAmount').value = '';
-        document.getElementById('multiGcashAmount').value = '';
+        document.getElementById('multiPaymentSection').style.display = 'block';
+        document.getElementById('multiCashAmount').value = '';
+        document.getElementById('multiGcashAmount').value = '';
         paymentAmounts.cash = 0;
         paymentAmounts.gcash = 0;
 
-        document.getElementById('multiCashAmount').oninput = updateMultiPayment;
-        document.getElementById('multiGcashAmount').oninput = updateMultiPayment;
+        document.getElementById('multiCashAmount').oninput = updateMultiPayment;
+        document.getElementById('multiGcashAmount').oninput = updateMultiPayment;
         document.getElementById('multiTotalPaid').textContent = '₱0.00';
-        document.getElementById('multiPaymentRemaining').textContent = '₱0.00';
+        document.getElementById('multiPaymentRemaining').textContent = '₱0.00';
         updateMultiPayment(); 
-    }
+    }
     document.getElementById('paymentActionButtons').style.display = 'block';
     document.getElementById('processPaymentBtn').disabled = true;
     updateProcessButton();
@@ -609,31 +602,31 @@ function updateSinglePayment() {
 
 //updateMultiPayment
 function updateMultiPayment() {
-    const cashAmount = Math.max(0, parseFloat(document.getElementById('multiCashAmount').value) || 0);
-    const gcashAmount = Math.max(0, parseFloat(document.getElementById('multiGcashAmount').value) || 0);
-    const total = calculateTotal();
-    
-    paymentAmounts.cash = cashAmount;
-    paymentAmounts.gcash = gcashAmount;
-    
-    const totalPaid = cashAmount + gcashAmount;
-    const remaining = totalPaid - total; 
+    const cashAmount = Math.max(0, parseFloat(document.getElementById('multiCashAmount').value) || 0);
+    const gcashAmount = Math.max(0, parseFloat(document.getElementById('multiGcashAmount').value) || 0);
+    const total = calculateTotal();
+    
+    paymentAmounts.cash = cashAmount;
+    paymentAmounts.gcash = gcashAmount;
+    
+    const totalPaid = cashAmount + gcashAmount;
+    const remaining = totalPaid - total; 
 
-    document.getElementById('multiTotalPaid').textContent = `₱${totalPaid.toFixed(2)}`;
-    
-    const remainingElement = document.getElementById('multiPaymentRemaining');
+    document.getElementById('multiTotalPaid').textContent = `₱${totalPaid.toFixed(2)}`;
+    
+    const remainingElement = document.getElementById('multiPaymentRemaining');
     remainingElement.style.color = '';
     
-    if (remaining < 0) {
-        remainingElement.style.color = 'var(--danger)'; 
-        remainingElement.innerHTML = `₱${Math.abs(remaining).toFixed(2)} <small style="color: var(--danger);">(Insufficient)</small>`;
-    } else {
-        remainingElement.style.color = remaining > 0 ? 'var(--primary)' : 'var(--success)';
-        
-        remainingElement.textContent = `₱${remaining.toFixed(2)}`; 
-    }
-    
-    updateProcessButton();
+    if (remaining < 0) {
+        remainingElement.style.color = 'var(--danger)'; 
+        remainingElement.innerHTML = `₱${Math.abs(remaining).toFixed(2)} <small style="color: var(--danger);">(Insufficient)</small>`;
+    } else {
+        remainingElement.style.color = remaining > 0 ? 'var(--primary)' : 'var(--success)';
+        
+        remainingElement.textContent = `₱${remaining.toFixed(2)}`; 
+    }
+    
+    updateProcessButton();
 }
 
 //updateProcessButton
@@ -674,41 +667,34 @@ function calculateTotal() {
     return subtotal - discountAmount;
 }
 
-// NEW FUNCTION: Tries to print using Web Bluetooth
-// Removed the actual Bluetooth logic to avoid searching issues. Now forces standard print.
+// NEW PRINT FUNCTION - SIMPLE AND RELIABLE
 function printReceipt() {
-    // Falls back to standard print to avoid Bluetooth searching issues
     printReceiptStandard();
 }
 
-// PINAKAMABILIS NA PRINT FUNCTION
+// UPDATED PRINT FUNCTION - GUARANTEED TO WORK
 function printReceiptStandard() {
     console.log('=== PRINT RECEIPT CALLED ===');
     
-    // Method 1: Use the receipt modal content
     const receiptElement = document.querySelector('.modern-receipt');
     
     if (!receiptElement) {
-        console.error('Receipt element not found in modal');
-        // Method 2: Try to generate receipt from last sale data
-        if (window.lastProcessedSaleData) {
-            generateReceiptFromSaleData();
-            return;
-        } else {
-            showErrorAlert('Print Error', 'No receipt data available for printing.');
-            return;
-        }
-    }
-    
-    // CREATE A SEPARATE PRINT WINDOW WITH ONLY RECEIPT CONTENT
-    const printWindow = window.open('', '_blank', 'width=350,height=700');
-    
-    if (!printWindow) {
-        showErrorAlert('Print Error', 'Please allow popups for printing.');
+        showErrorAlert('Print Error', 'No receipt found. Please generate receipt first.');
         return;
     }
     
-    // SIMPLE RECEIPT STYLING FOR THERMAL PRINTER
+    // Create iframe for printing
+    const printFrame = document.createElement('iframe');
+    printFrame.style.position = 'fixed';
+    printFrame.style.right = '0';
+    printFrame.style.bottom = '0';
+    printFrame.style.width = '0';
+    printFrame.style.height = '0';
+    printFrame.style.border = 'none';
+    
+    document.body.appendChild(printFrame);
+    
+    // Simple receipt HTML
     const receiptHTML = `
         <!DOCTYPE html>
         <html>
@@ -716,129 +702,24 @@ function printReceiptStandard() {
             <title>Receipt</title>
             <meta charset="UTF-8">
             <style>
-                * {
-                    margin: 0;
-                    padding: 0;
-                    box-sizing: border-box;
-                }
                 body {
-                    font-family: 'Courier New', Courier, monospace;
+                    font-family: 'Courier New', monospace;
                     font-size: 12px;
                     line-height: 1.2;
                     width: 80mm;
                     margin: 0 auto;
-                    padding: 5px;
+                    padding: 10px;
                     color: #000;
                     background: white;
                 }
-                .receipt-header {
-                    text-align: center;
-                    margin-bottom: 8px;
-                    padding-bottom: 5px;
-                    border-bottom: 1px dashed #000;
-                }
-                .receipt-shop-name {
-                    font-weight: bold;
-                    font-size: 14px;
-                    margin-bottom: 2px;
-                }
-                .receipt-address {
-                    font-size: 10px;
-                }
-                .receipt-info {
-                    text-align: center;
-                    font-size: 10px;
-                    margin-bottom: 8px;
-                }
-                .receipt-divider {
-                    border-top: 1px dashed #000;
-                    margin: 5px 0;
-                }
-                .receipt-section-title {
-                    font-weight: bold;
-                    margin-bottom: 3px;
-                    text-align: center;
-                }
-                .receipt-item {
-                    margin-bottom: 4px;
-                }
-                .receipt-item-main {
-                    display: flex;
-                    justify-content: space-between;
-                }
-                .receipt-item-sub {
-                    display: flex;
-                    justify-content: space-between;
-                    font-size: 10px;
-                    color: #666;
-                }
-                .receipt-totals {
-                    margin: 8px 0;
-                }
-                .receipt-total-row {
-                    display: flex;
-                    justify-content: space-between;
-                    margin-bottom: 2px;
-                }
-                .receipt-grand-total {
-                    font-weight: bold;
-                    font-size: 13px;
-                    border-top: 1px solid #000;
-                    padding-top: 4px;
-                    margin-top: 4px;
-                }
-                .receipt-payment-method {
-                    display: flex;
-                    justify-content: space-between;
-                    margin-bottom: 3px;
-                }
-                .payment-method-badge {
-                    font-weight: bold;
-                }
-                .receipt-payment-row {
-                    display: flex;
-                    justify-content: space-between;
-                    font-size: 11px;
-                    margin-bottom: 1px;
-                }
-                .receipt-footer {
-                    text-align: center;
-                    margin: 8px 0;
-                }
-                .receipt-thankyou {
-                    font-size: 10px;
-                    margin-bottom: 3px;
-                }
-                .receipt-greeting {
-                    font-weight: bold;
-                    font-size: 11px;
-                }
-                .receipt-queue {
-                    text-align: center;
-                    margin: 10px 0;
-                    padding: 8px;
-                    border: 1px dashed #000;
-                }
-                .queue-number-large {
-                    font-size: 18px;
-                    font-weight: bold;
-                    margin-bottom: 3px;
-                }
-                .queue-notice {
-                    font-size: 10px;
-                }
-                .notes-section {
-                    font-size: 10px;
-                    margin-top: 5px;
-                    padding: 3px;
-                    border-top: 1px dashed #ccc;
-                    color: #f00;
+                .modern-receipt {
+                    width: 100%;
                 }
                 @media print {
                     body {
-                        width: 80mm;
                         margin: 0;
-                        padding: 5px;
+                        padding: 10px;
+                        width: 80mm;
                     }
                     .modern-receipt {
                         width: 80mm;
@@ -848,26 +729,41 @@ function printReceiptStandard() {
         </head>
         <body>
             ${receiptElement.outerHTML}
-            <script>
-                // AUTO PRINT AND CLOSE
-                window.onload = function() {
-                    window.print();
-                    setTimeout(function() {
-                        window.close();
-                    }, 100);
-                };
-            </script>
         </body>
         </html>
     `;
     
-    printWindow.document.write(receiptHTML);
-    printWindow.document.close();
+    // Write content to iframe
+    printFrame.contentDocument.open();
+    printFrame.contentDocument.write(receiptHTML);
+    printFrame.contentDocument.close();
+    
+    // Print after content loaded
+    printFrame.onload = function() {
+        setTimeout(() => {
+            try {
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+                
+                // Remove iframe after print
+                setTimeout(() => {
+                    if (document.body.contains(printFrame)) {
+                        document.body.removeChild(printFrame);
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Print error:', error);
+                if (document.body.contains(printFrame)) {
+                    document.body.removeChild(printFrame);
+                }
+                showErrorAlert('Print Error', 'Failed to print receipt.');
+            }
+        }, 500);
+    };
 }
 
-
-// UPDATED PROCESS PAYMENT (Saves Correct Change)
-// TANGGALIN ANG AUTO-PRINT SA PROCESS PAYMENT
+// UPDATED PROCESS PAYMENT - NO AUTO PRINT
 function processPayment() {
     console.log('=== PROCESS PAYMENT STARTED ===');
     
@@ -920,7 +816,7 @@ function processPayment() {
             
             window.lastProcessedSaleData = sale; // Store sale data globally
             
-            // IMPORTANT: Show receipt FIRST 
+            // Show receipt FIRST 
             showReceipt(sale);
             
             cart = [];
@@ -935,9 +831,6 @@ function processPayment() {
             closePaymentModal();
             showNotification('Success', `Payment processed! Queue #${lastQueueNumber}`, 'success');
             
-            // TANGGALIN ANG AUTO-PRINT - MANUAL NA LANG
-            // WALANG setTimeout(() => { printReceiptStandard(); }, 500);
-            
         } else {
             showNotification('Error', 'Failed to process payment! Please try again.', 'error');
         }
@@ -945,63 +838,6 @@ function processPayment() {
         console.error('Payment error:', error);
         showNotification('Error', 'System error: ' + error.message, 'error');
     }
-}
-
-// SIMPLENG PRINT FUNCTION - WALANG COMPLICATION
-function printReceiptStandard() {
-    console.log('=== PRINT RECEIPT CALLED ===');
-    
-    // Gumamit ng VERY SIMPLE approach - direct print ng receipt content
-    const receiptElement = document.querySelector('.modern-receipt');
-    
-    if (!receiptElement) {
-        showErrorAlert('Print Error', 'No receipt found. Please generate receipt first.');
-        return;
-    }
-    
-    // Create a simple print window
-    const printWindow = window.open('', '_blank', 'width=350,height=600');
-    
-    if (!printWindow) {
-        // Fallback: print current window
-        window.print();
-        return;
-    }
-    
-    // VERY SIMPLE HTML - WALANG COMPLEX STYLING
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Receipt</title>
-            <style>
-                body { 
-                    font-family: 'Courier New', monospace;
-                    width: 80mm;
-                    margin: 0 auto;
-                    padding: 10px;
-                    font-size: 12px;
-                    line-height: 1.2;
-                }
-                @media print {
-                    body { margin: 0; padding: 10px; }
-                }
-            </style>
-        </head>
-        <body>
-            ${receiptElement.outerHTML}
-        </body>
-        </html>
-    `);
-    
-    printWindow.document.close();
-    
-    // Print after short delay to ensure content loaded
-    setTimeout(() => {
-        printWindow.print();
-        // Optional: close after print
-        setTimeout(() => printWindow.close(), 500);
-    }, 100);
 }
 
 // Close Payment Modal
@@ -1283,6 +1119,7 @@ function handleLogin() {
         showNotification('Error', 'Invalid email or password!', 'error');
     }
 }
+
 function openOrderDetailsModal(queueNumber) {
     // FIX: Close the Queue Modal when opening Order Details Modal
     closeQueueModal(); 
@@ -1346,215 +1183,10 @@ function openOrderDetailsModal(queueNumber) {
 
     document.getElementById('orderDetailsModal').style.display = 'flex';
 }
+
 function closeOrderDetailsModal() {
     document.getElementById('orderDetailsModal').style.display = 'none';
 }
-function generateReceiptFromSaleData() {
-    if (!window.lastProcessedSaleData) {
-        showErrorAlert('Print Error', 'No sale data available for printing.');
-        return;
-    }
-    
-    const saleData = window.lastProcessedSaleData;
-    const printWindow = window.open('', '_blank', 'width=350,height=700');
-    
-    if (!printWindow) {
-        showErrorAlert('Print Error', 'Please allow popups for printing.');
-        return;
-    }
-    
-    // GENERATE RECEIPT HTML FROM SALE DATA
-    let itemsHTML = '';
-    saleData.items.forEach(item => {
-        const product = products.find(p => p.id === item.productId);
-        if (product) {
-            const displayName = item.size ? `${product.name} (${item.size})` : product.name;
-            itemsHTML += `
-                <div class="receipt-item">
-                    <div class="receipt-item-main">
-                        <span class="receipt-item-name">${displayName}</span>
-                        <span class="receipt-item-qty">${item.quantity}x</span>
-                    </div>
-                    <div class="receipt-item-sub">
-                        <span class="receipt-item-price">@₱${item.price.toFixed(2)}</span>
-                        <span class="receipt-item-total">₱${(item.price * item.quantity).toFixed(2)}</span>
-                    </div>
-                </div>
-            `;
-        }
-    });
-    
-    let paymentHTML = '';
-    const paidAmount = saleData.paymentMethod === 'cash' ? 
-        (saleData.paymentAmounts?.cash || saleData.total) : 
-        (saleData.paymentAmounts?.gcash || saleData.total);
-    
-    if (saleData.paymentMethod === 'multi' && saleData.paymentAmounts) {
-        paymentHTML = `
-            <div class="receipt-payment-methods">
-                <div class="receipt-payment-row">
-                    <span>Cash:</span>
-                    <span>₱${saleData.paymentAmounts.cash.toFixed(2)}</span>
-                </div>
-                <div class="receipt-payment-row">
-                    <span>GCash:</span>
-                    <span>₱${saleData.paymentAmounts.gcash.toFixed(2)}</span>
-                </div>
-                ${(saleData.paymentAmounts.cash + saleData.paymentAmounts.gcash) > saleData.total ? `
-                <div class="receipt-payment-row">
-                    <span>Change:</span>
-                    <span>₱${((saleData.paymentAmounts.cash + saleData.paymentAmounts.gcash) - saleData.total).toFixed(2)}</span>
-                </div>
-                ` : ''}
-            </div>
-        `;
-    } else {
-        paymentHTML = `
-            <div class="receipt-payment-methods">
-                <div class="receipt-payment-row">
-                    <span>${saleData.paymentMethod.toUpperCase()} Paid:</span>
-                    <span>₱${paidAmount.toFixed(2)}</span>
-                </div>
-                ${paidAmount > saleData.total ? `
-                <div class="receipt-payment-row">
-                    <span>Change:</span>
-                    <span>₱${(paidAmount - saleData.total).toFixed(2)}</span>
-                </div>
-                ` : ''}
-            </div>
-        `;
-    }
-    
-    let notesHTML = '';
-    if (saleData.notes && saleData.notes.trim()) {
-        notesHTML = `<div class="notes-section">NOTES: ${saleData.notes}</div>`;
-    }
 
-    const shopName = shopInfo.name || '';
-    const shopAddress = shopInfo.address || '';
-    const shopFooter = shopInfo.receiptFooter || '';
-
-    const now = new Date();
-    const dateString = now.toLocaleDateString('en-PH', { 
-        year: 'numeric', 
-        month: '2-digit', 
-        day: '2-digit' 
-    });
-    const timeString = now.toLocaleTimeString('en-PH', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-    });
-
-    const receiptHTML = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Receipt</title>
-            <style>
-                /* SAME STYLES AS ABOVE */
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.2; width: 80mm; margin: 0 auto; padding: 5px; color: #000; background: white; }
-                .receipt-header { text-align: center; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px dashed #000; }
-                .receipt-shop-name { font-weight: bold; font-size: 14px; margin-bottom: 2px; }
-                .receipt-address { font-size: 10px; }
-                .receipt-info { text-align: center; font-size: 10px; margin-bottom: 8px; }
-                .receipt-divider { border-top: 1px dashed #000; margin: 5px 0; }
-                .receipt-section-title { font-weight: bold; margin-bottom: 3px; text-align: center; }
-                .receipt-item { margin-bottom: 4px; }
-                .receipt-item-main { display: flex; justify-content: space-between; }
-                .receipt-item-sub { display: flex; justify-content: space-between; font-size: 10px; color: #666; }
-                .receipt-totals { margin: 8px 0; }
-                .receipt-total-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
-                .receipt-grand-total { font-weight: bold; font-size: 13px; border-top: 1px solid #000; padding-top: 4px; margin-top: 4px; }
-                .receipt-payment-method { display: flex; justify-content: space-between; margin-bottom: 3px; }
-                .payment-method-badge { font-weight: bold; }
-                .receipt-payment-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 1px; }
-                .receipt-footer { text-align: center; margin: 8px 0; }
-                .receipt-thankyou { font-size: 10px; margin-bottom: 3px; }
-                .receipt-greeting { font-weight: bold; font-size: 11px; }
-                .receipt-queue { text-align: center; margin: 10px 0; padding: 8px; border: 1px dashed #000; }
-                .queue-number-large { font-size: 18px; font-weight: bold; margin-bottom: 3px; }
-                .queue-notice { font-size: 10px; }
-                .notes-section { font-size: 10px; margin-top: 5px; padding: 3px; border-top: 1px dashed #ccc; color: #f00; }
-                @media print { body { width: 80mm; margin: 0; padding: 5px; } }
-            </style>
-        </head>
-        <body>
-            <div class="modern-receipt">
-                <div class="receipt-header">
-                    <div class="receipt-shop-name">${shopName}</div>
-                    <div class="receipt-address">${shopAddress}</div>
-                </div>
-                
-                <div class="receipt-info">
-                    <div class="receipt-date">${dateString} ${timeString}</div>
-                    <div class="receipt-transaction">Receipt #: ${saleData.id || '000001'}</div>
-                </div>
-                
-                <div class="receipt-divider"></div>
-                
-                <div class="receipt-items">
-                    <div class="receipt-section-title">ITEMS</div>
-                    ${itemsHTML}
-                </div>
-                
-                <div class="receipt-divider"></div>
-                
-                <div class="receipt-totals">
-                    <div class="receipt-total-row">
-                        <span>Subtotal:</span>
-                        <span>₱${saleData.subtotal.toFixed(2)}</span>
-                    </div>
-                    ${saleData.discount > 0 ? `
-                    <div class="receipt-total-row receipt-discount">
-                        <span>Discount (${saleData.discountType.toUpperCase()}):</span>
-                        <span>-₱${saleData.discount.toFixed(2)}</span>
-                    </div>
-                    ` : ''}
-                    <div class="receipt-total-row receipt-grand-total">
-                        <span>TOTAL:</span>
-                        <span>₱${saleData.total.toFixed(2)}</span>
-                    </div>
-                </div>
-                
-                <div class="receipt-payment">
-                    <div class="receipt-section-title">PAYMENT</div>
-                    <div class="receipt-payment-method">
-                        <span>Method:</span>
-                        <span class="payment-method-badge ${saleData.paymentMethod}">${saleData.paymentMethod.toUpperCase()}</span>
-                    </div>
-                    ${paymentHTML}
-                </div>
-                
-                <div class="receipt-divider"></div>
-                
-                <div class="receipt-footer">
-                    <div class="receipt-thankyou">${shopFooter}</div>
-                    <b><div class="receipt-greeting">Thank you for your purchase!</div></b>
-                </div>
-                
-                <div class="receipt-divider"></div>
-
-                <div class="receipt-queue">
-                    <div class="queue-number-large">Queue #${lastQueueNumber.toString().padStart(3, '0')}</div>
-                    <div class="queue-notice">Please wait for your number to be called</div>
-                </div>
-                ${notesHTML}
-            </div>
-            <script>
-                window.onload = function() {
-                    window.print();
-                    setTimeout(function() {
-                        window.close();
-                    }, 100);
-                };
-            </script>
-        </body>
-        </html>
-    `;
-    
-    printWindow.document.write(receiptHTML);
-    printWindow.document.close();
-}
 // Initialize when page loads
-    document.addEventListener('DOMContentLoaded', initPOS);
+document.addEventListener('DOMContentLoaded', initPOS);

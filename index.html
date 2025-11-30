@@ -75,7 +75,7 @@
                         
                         <div class="form-group">
                             <label class="form-label">Order Notes</label>
-                            <textarea class="form-input" id="orderNotes" rows="2" placeholder="Add specific order notes here..."></textarea>
+                            <textarea class="form-input" id="orderNotes" rows="2" placeholder="Add specific notes here..."></textarea>
                         </div>
                         <button class="btn btn-primary checkout-btn" onclick="openPaymentModal()">
                             Confirm
@@ -199,6 +199,7 @@
         </div>
     </div>
 
+    <!-- UPDATED RECEIPT MODAL - CHANGED PRINT BUTTON -->
     <div class="modal" id="receiptModal" style="z-index: 25000;">
         <div class="modal-content" style="max-width: 350px; padding: 0;">
             <div class="modal-header" style="padding: 15px 20px; border-bottom: 1px solid #eee;">
@@ -207,8 +208,8 @@
             </div>
             <div id="receiptContent" style="padding: 20px; background: #f9f9f9; max-height: 60vh; overflow-y: auto;"></div>
             <div class="form-actions" style="padding: 15px 20px; border-top: 1px solid #eee; background: white; border-radius: 0 0 8px 8px;">
-                <button type="button" class="btn btn-outline" onclick="closeReceiptModal()">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="printReceipt()">🖨️ Print</button>
+                <button type="button" class="btn btn-outline" onclick="closeReceiptModal()">Close</button>
+                <button type="button" class="btn btn-primary" onclick="printReceiptStandard()">🖨️ Print Receipt</button>
             </div>
         </div>
     </div>
