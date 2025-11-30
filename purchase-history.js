@@ -189,17 +189,18 @@ async function bluetoothPrint(rawReceipt) {
     }
 
     try {
-        showNotification("Bluetooth Print", "Searching for thermal printer...", 'info', 0);
+        // FIX: Remove 'searching' notification delay to avoid confusion
+        showNotification("Bluetooth Print", "Opening printer selection...", 'info', 1000); 
         
-        // NOTE: YOU MUST CHANGE THE UUIDS BELOW TO MATCH YOUR PRINTER'S SERVICE AND CHARACTERISTIC
+        // Use generic filters to detect any printer
         const device = await navigator.bluetooth.requestDevice({
-            filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }], 
+            acceptAllDevices: true,
             optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', '49535343-fe7d-4ae5-8fa9-9fafd205e455'] 
         });
 
         const server = await device.gatt.connect();
 
-        // Use the correct Service UUID
+        // Use the correct Service UUID (Assuming common thermal printer service)
         const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb'); 
         
         // Use the correct Characteristic UUID for writing data
@@ -218,7 +219,12 @@ async function bluetoothPrint(rawReceipt) {
         showNotification("Success", "Print job sent successfully via Bluetooth!", 'success', 3000);
         
     } catch (error) {
-        showErrorAlert("Bluetooth Print Failed", "Error connecting or sending data. Check printer connection. Details: " + error.message);
+        // FIX: Improve error message for user
+        if (error.name === 'NotFoundError') {
+            showErrorAlert("Bluetooth Failed", "No printer selected or found. Paki-pindot ulit ang Print at piliin ang XP-58H.", 'error');
+        } else {
+            showErrorAlert("Bluetooth Print Failed", "Error connecting or sending data. Details: " + error.message, 'error');
+        }
         console.error("Bluetooth print error:", error);
         // Fallback to standard print dialog
         printReceiptStandardFromModal();
@@ -274,14 +280,7 @@ function generateRawReceipt(saleData) {
 
 // NEW FUNCTION: Button handler for history receipt modal
 function printReceiptFromModal() {
-    // If Web Bluetooth is available and we have sale data, try the dedicated thermal printer function
-    if (navigator.bluetooth && currentReceiptSaleData) {
-        const rawReceipt = generateRawReceipt(currentReceiptSaleData); // Use stored sale data
-        bluetoothPrint(rawReceipt);
-        return;
-    }
-    
-    // Fallback to standard browser print
+    // Falls back to standard print
     printReceiptStandardFromModal();
 }
 

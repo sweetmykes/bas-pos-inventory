@@ -102,7 +102,7 @@ function updateCategory(id, updatedCategory) {
     }
 
 function deleteCategory(id) {
-        const productsInCategory = products.filter(p => p.categoryId === id);
+        const productsInCategory = products.filter(p => p.id === id);
         if (productsInCategory.length > 0) {
             throw new Error('Cannot delete category with existing products');
         }
@@ -141,7 +141,8 @@ function addSale(saleData) {
                 total: saleData.total || 0,
                 paymentMethod: saleData.paymentMethod || 'cash',
                 paymentAmounts: saleData.paymentAmounts || { cash: 0, gcash: 0 },
-                change: saleData.change || 0
+                change: saleData.change || 0,
+                notes: saleData.notes || '' // NEW: Make sure Notes is included
             };
             
             console.log('Created sale object:', sale);
@@ -380,6 +381,7 @@ function addToQueue(saleData) {
         timestamp: new Date().toISOString(),
         items: saleData.items,
         total: saleData.total,
+        notes: saleData.notes || '', // FIX: Include notes field in queue data
         status: 'preparing' 
     };
     

@@ -7,10 +7,10 @@ let selectedPaymentMethod = null;
 let paymentAmounts = { cash: 0, gcash: 0 };
 let selectedProductForSize = null;
 let sizeSelectionModal = null;
-window.lastProcessedSaleData = null; // NEW: Global variable for the last successful sale
+window.lastProcessedSaleData = null; // Store sale data for print
 updatePOSBranding();
 
-// ESC/POS Commands (Simplified)
+// ESC/POS Commands (Simplified) - Only used for RAW printing simulation
 const ESC = '\x1B';
 const GS = '\x1D';
 const INIT = `${ESC}@`;
@@ -29,7 +29,7 @@ function initPOS() {
     updateCartDisplay();
     updatePOSTitle();
     createSizeSelectionModal();
-    updateQueueDisplay();
+    window.updateQueueDisplay(); // Call global queue update
 }
 
 function updatePOSBranding() {
@@ -675,136 +675,39 @@ function calculateTotal() {
     return subtotal - discountAmount;
 }
 
-// NEW FUNCTION: Tries to print using Web Bluetooth API
-async function bluetoothPrint(rawReceipt) {
-    
-    if (!navigator.bluetooth) {
-        showErrorAlert("Bluetooth Error", "Web Bluetooth API is not supported. Printing via standard dialog.");
-        printReceiptStandard(); 
-        return;
-    }
-
-    try {
-        showNotification("Bluetooth Print", "Searching for thermal printer...", 'info', 0);
-        
-        // NOTE: YOU MUST CHANGE THE UUIDS BELOW TO MATCH YOUR PRINTER'S SERVICE AND CHARACTERISTIC
-        // Common UUIDs for thermal printers: 18F0 (GATT Service), 2AF1 (Write Characteristic)
-        const device = await navigator.bluetooth.requestDevice({
-            // NEW FIX: Use acceptAllDevices and optionalServices for better discovery
-            acceptAllDevices: true,
-            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', '49535343-fe7d-4ae5-8fa9-9fafd205e455'] 
-        });
-
-        const server = await device.gatt.connect();
-
-        // Use the correct Service UUID (You may need to inspect your XP-58H for the correct UUID)
-        const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb'); 
-        
-        // Use the correct Characteristic UUID for writing data
-        const characteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb'); 
-
-        const encoder = new TextEncoder();
-        const data = encoder.encode(rawReceipt);
-
-        // Send in chunks (important for stability)
-        const CHUNK_SIZE = 512;
-        for (let i = 0; i < data.length; i += CHUNK_SIZE) {
-            const chunk = data.slice(i, i + CHUNK_SIZE);
-            await characteristic.writeValue(chunk);
-        }
-        
-        showNotification("Success", "Print job sent successfully via Bluetooth!", 'success', 3000);
-        
-    } catch (error) {
-        showErrorAlert("Bluetooth Print Failed", "Kailangan mong mano-manong pumili ng printer. Error: " + error.message, 'error');
-        console.error("Bluetooth print error:", error);
-        // Fallback to standard print dialog
-        printReceiptStandard();
-    }
-}
-
-// NEW FUNCTION: Generates simple ESC/POS compatible text
-function generateRawReceipt(saleData) {
-    const shopName = shopInfo.name || 'POS Shop';
-    const shopAddress = shopInfo.address || '';
-    const shopFooter = shopInfo.receiptFooter || 'Thank you!';
-    const queueNumber = lastQueueNumber.toString().padStart(3, '0');
-    const date = new Date(saleData.timestamp).toLocaleString();
-    const total = saleData.total.toFixed(2);
-
-    let receipt = INIT;
-    
-    // Header
-    receipt += CENTER + BOLD_ON + shopName + BOLD_OFF + LINE_FEED;
-    receipt += CENTER + shopAddress + LINE_FEED;
-    receipt += CENTER + `Ref: #${saleData.id}` + LINE_FEED;
-    receipt += CENTER + date + LINE_FEED + LINE_FEED;
-    
-    // Items
-    receipt += LEFT + 'QTY ITEM                        TOTAL' + LINE_FEED;
-    receipt += '--------------------------------' + LINE_FEED;
-
-    saleData.items.forEach(item => {
-        const product = products.find(p => p.id === item.productId);
-        const name = product ? product.name : 'Unknown Product';
-        const itemTotal = (item.price * item.quantity).toFixed(2);
-        const details = item.size ? `(${item.size})` : '';
-        const line = `${item.quantity} ${name} ${details}`;
-        
-        receipt += LEFT + line.padEnd(28, ' ').substring(0, 28) + itemTotal.padStart(4, ' ') + LINE_FEED;
-    });
-
-    // Totals
-    receipt += '--------------------------------' + LINE_FEED;
-    receipt += BOLD_ON + `TOTAL: ${total.padStart(25, ' ')}` + BOLD_ON + LINE_FEED;
-    receipt += '--------------------------------' + LINE_FEED + LINE_FEED;
-
-    // Queue Number
-    receipt += CENTER + 'Queue Number' + LINE_FEED;
-    receipt += CENTER + BOLD_ON + `### ${queueNumber}` + BOLD_OFF + LINE_FEED + LINE_FEED;
-    
-    // Footer
-    receipt += CENTER + shopFooter + LINE_FEED;
-    receipt += CENTER + 'THANK YOU!' + LINE_FEED + LINE_FEED;
-    
-    // Commands to cut paper
-    receipt += LINE_FEED + LINE_FEED + CUT; 
-
-    return receipt;
-}
-
-
-// OVERWRITE THE ORIGINAL printReceipt function in pos.js
+// NEW FUNCTION: Tries to print using Web Bluetooth
+// Removed the actual Bluetooth logic to avoid searching issues. Now forces standard print.
 function printReceipt() {
-    // If Web Bluetooth is available and we have sale data, try the dedicated thermal printer function
-    if (navigator.bluetooth && window.lastProcessedSaleData) {
-        const rawReceipt = generateRawReceipt(window.lastProcessedSaleData);
-        bluetoothPrint(rawReceipt);
-        return;
-    }
-    
-    // Fallback to standard browser print
+    // FIX: Force standard print dialog immediately
     printReceiptStandard();
 }
 
-// NEW FUNCTION: Standard Print Fallback
+// NEW FUNCTION: Standard Print Fallback (Final Version)
 function printReceiptStandard() {
     const receiptElement = document.querySelector('.modern-receipt');
     if (!receiptElement) {
-        console.error('Receipt element not found for standard print.');
+        showErrorAlert('Print Error', 'Receipt content not found for printing.');
         return;
     }
     
-    // Use existing modern-receipt content for standard print dialog
+    // Get the HTML content of the receipt
     const receiptContent = receiptElement.outerHTML;
     
+    // Open a new window specifically for printing
     const printWindow = window.open('', '_blank');
+    
+    if (!printWindow) {
+        showErrorAlert('Print Error', 'The browser blocked the print window pop-up. Check your settings.');
+        return;
+    }
+    
     printWindow.document.write(`
         <!DOCTYPE html>
         <html>
             <head>
                 <title>Print Receipt</title>
                 <style>
+                    /* Minimal styles copied for thermal print size and font */
                     body { 
                         font-family: 'Courier New', monospace; 
                         margin: 0; 
@@ -823,26 +726,8 @@ function printReceiptStandard() {
                             font-size: 11px !important;
                         }
                     }
-                    .modern-receipt { 
-                        width: 80mm;
-                        margin: 0 auto;
-                        padding: 15px;
-                        background: white;
-                    }
-                    .receipt-header { text-align: center; margin-bottom: 10px; }
-                    .receipt-shop-name { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
-                    .receipt-address { font-size: 10px; color: #666; }
-                    .receipt-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 10px; }
-                    .receipt-divider { border-bottom: 1px dashed #000; margin: 10px 0; }
-                    .receipt-section-title { font-weight: bold; font-size: 12px; margin-bottom: 5px; }
-                    .receipt-item { margin-bottom: 5px; }
-                    .receipt-item-main { display: flex; justify-content: space-between; font-weight: bold; }
-                    .receipt-item-sub { display: flex; justify-content: space-between; color: #666; font-size: 10px; }
-                    .receipt-total-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
-                    .receipt-grand-total { font-weight: bold; font-size: 14px; margin-top: 5px; }
-                    .receipt-payment-method { display: flex; justify-content: space-between; margin-bottom: 5px; }
-                    .receipt-payment-row { display: flex; justify-content: space-between; font-size: 11px; }
-                    .receipt-footer { text-align: center; font-size: 10px; color: #666; margin-top: 15px; }
+                    /* Ensure no headers/footers print */
+                    @page { margin: 0; } 
                 </style>
             </head>
             <body onload="window.print(); setTimeout(() => window.close(), 500);">
@@ -859,7 +744,7 @@ function processPayment() {
     console.log('=== PROCESS PAYMENT STARTED ===');
     
     if (cart.length === 0) {
-        showNotification('Error', 'Cart is empty! Please add items first.', 'error');
+        showNotification('Error', 'Cart is empty!', 'error');
         return;
     }
     
@@ -914,7 +799,7 @@ function processPayment() {
             document.getElementById('orderNotes').value = ''; // NEW: Clear notes after successful payment
             saveCart();
             updateCartDisplay();
-            updateQueueDisplay(); // Update queue display
+            window.updateQueueDisplay(); // FIX: Call global queue display
             resetDiscountButtons();
             loadProducts();
             
@@ -958,12 +843,61 @@ function closePaymentModal() {
 
 // New: Queue Modal Functions
 function openQueueModal() {
-    updateQueueDisplay(); // Always update before opening
+    window.updateQueueDisplay(); // FIX: Call global queue display
     document.getElementById('queueModal').style.display = 'flex';
 }
 
 function closeQueueModal() {
     document.getElementById('queueModal').style.display = 'none';
+}
+
+// UPDATED: updateQueueDisplay - MADE GLOBAL FUNCTION (window.updateQueueDisplay)
+window.updateQueueDisplay = function() {
+    const queueNavCount = document.getElementById('queueNavCount');
+    const queueModalCount = document.getElementById('queueModalCount');
+    const queueItemsModal = document.getElementById('queueItemsModal');
+    const activeQueue = getActiveQueue();
+    
+    // Update Navbar Button
+    const countText = `${activeQueue.length} orders`;
+    if (queueNavCount) queueNavCount.textContent = countText;
+    
+    // Update Modal Title
+    if (queueModalCount) queueModalCount.textContent = countText;
+    
+    if (!queueItemsModal) return;
+
+    if (activeQueue.length === 0) {
+        queueItemsModal.innerHTML = '<div class="text-center" style="color: var(--secondary); padding: 40px;">No active orders</div>';
+        return;
+    }
+    
+    queueItemsModal.innerHTML = '';
+    activeQueue.forEach(item => {
+        const queueElement = document.createElement('div');
+        queueElement.className = 'queue-item';
+        queueElement.innerHTML = `
+            <div class="queue-number">Queue #${item.queueNumber.toString().padStart(3, '0')}</div>
+            <div class="queue-time">${new Date(item.timestamp).toLocaleTimeString('en-PH', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            })}</div>
+            <div class="queue-items-count">${item.items.length} item${item.items.length !== 1 ? 's' : ''}</div>
+            <div class="queue-total">₱${item.total.toFixed(2)}</div>
+            <div style="display:flex; gap: 8px;">
+                <button class="btn btn-outline btn-sm" onclick="openOrderDetailsModal(${item.queueNumber})">View Order</button>
+                <button class="btn btn-success btn-sm" onclick="window.completeOrder(${item.queueNumber})">Done</button>
+            </div>
+        `;
+        queueItemsModal.appendChild(queueElement);
+    });
+}
+
+window.completeOrder = function(queueNumber) {
+    if (completeQueueItem(queueNumber)) {
+        window.updateQueueDisplay();
+        showNotification('Success', `Order #${queueNumber} completed!`, 'success');
+    }
 }
 
 // Update receipt to show queue number instead of barcode
@@ -990,6 +924,16 @@ function showReceipt(saleData) {
         }
     });
     
+    // NEW FIX: Add Notes to receipt HTML
+    let notesHTML = '';
+    if (saleData.notes && saleData.notes.trim()) {
+        notesHTML = `
+            <div style="font-size: 11px; margin-top: 10px; padding: 5px; border-top: 1px dashed #ccc; color: #ef4444;">
+                <p>NOTES: ${saleData.notes}</p>
+            </div>
+        `;
+    }
+
     let paymentHTML = '';
     const paidAmount = saleData.paymentMethod === 'cash' ? 
         (saleData.paymentAmounts?.cash || saleData.total) : 
@@ -1106,7 +1050,7 @@ function showReceipt(saleData) {
                 <div class="queue-number-large">Queue #${lastQueueNumber.toString().padStart(3, '0')}</div>
                 <div class="queue-notice">Please wait for your number to be called</div>
             </div>
-    `;
+            ${notesHTML} `;
     
     document.getElementById('receiptModal').style.display = 'flex';
 }
@@ -1164,30 +1108,30 @@ function openOrderDetailsModal(queueNumber) {
     }
     
     title.textContent = `Order Details - Queue #${queueNumber.toString().padStart(3, '0')}`;
-    content.innerHTML = '';
     
+    // 1. Clear current content
+    let itemsHtml = '';
     item.items.forEach(orderItem => {
         const product = products.find(p => p.id === orderItem.productId);
         const displayName = orderItem.size ? `${product.name} (${orderItem.size})` : product.name;
         
-        const cartItem = document.createElement('div');
-        cartItem.className = 'cart-item';
-        cartItem.style.borderBottom = '1px dashed var(--border)';
-        cartItem.innerHTML = `
-            <div class="cart-item-info">
-                <div class="cart-item-name">${displayName}</div>
-                <div class="cart-item-price">₱${(orderItem.price || 0).toFixed(2)} × ${orderItem.quantity}</div>
-            </div>
-            <div class="cart-item-quantity" style="font-weight: bold;">
-                ₱${(orderItem.price * orderItem.quantity).toFixed(2)}
+        itemsHtml += `
+            <div class="cart-item" style="border-bottom: 1px dashed var(--border);">
+                <div class="cart-item-info">
+                    <div class="cart-item-name">${displayName}</div>
+                    <div class="cart-item-price">₱${(orderItem.price || 0).toFixed(2)} × ${orderItem.quantity}</div>
+                </div>
+                <div class="cart-item-quantity" style="font-weight: bold;">
+                    ₱${(orderItem.price * orderItem.quantity).toFixed(2)}
+                </div>
             </div>
         `;
-        content.appendChild(cartItem);
     });
-    
-    // NEW FIX: Add Notes display in red box
+
+    let notesHtml = '';
+    // 2. Add Notes display in red box (if notes exist)
     if (item.notes && item.notes.trim()) {
-        content.innerHTML += `
+        notesHtml = `
             <div style="margin-top: 15px; padding: 10px; border: 2px solid var(--danger); background: #fef2f2; border-radius: 6px; color: var(--danger); font-weight: 600; font-size: 14px;">
                 ORDER NOTES: <br>
                 ${item.notes}
@@ -1195,6 +1139,10 @@ function openOrderDetailsModal(queueNumber) {
         `;
     }
 
+    // 3. Assemble and render the final content
+    content.innerHTML = itemsHtml;
+    content.innerHTML += notesHtml; // Inject Notes directly after items
+    
     content.innerHTML += `
         <div class="cart-item" style="border-bottom: none; font-weight: bold; padding-top: 15px;">
             <div class="cart-item-info">
