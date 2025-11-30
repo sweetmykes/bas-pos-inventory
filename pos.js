@@ -424,6 +424,8 @@ function clearCart() {
     if (confirm('Clear all items from cart?')) {
         cart = [];
         selectedDiscount = { type: 'none', amount: 0 };
+        // FIX: Clear notes when clearing cart
+        document.getElementById('orderNotes').value = '';
         saveCart();
         updateCartDisplay();
         resetDiscountButtons();
@@ -686,14 +688,16 @@ async function bluetoothPrint(rawReceipt) {
         showNotification("Bluetooth Print", "Searching for thermal printer...", 'info', 0);
         
         // NOTE: YOU MUST CHANGE THE UUIDS BELOW TO MATCH YOUR PRINTER'S SERVICE AND CHARACTERISTIC
+        // Common UUIDs for thermal printers: 18F0 (GATT Service), 2AF1 (Write Characteristic)
         const device = await navigator.bluetooth.requestDevice({
-            filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }], 
+            // NEW FIX: Use acceptAllDevices and optionalServices for better discovery
+            acceptAllDevices: true,
             optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', '49535343-fe7d-4ae5-8fa9-9fafd205e455'] 
         });
 
         const server = await device.gatt.connect();
 
-        // Use the correct Service UUID
+        // Use the correct Service UUID (You may need to inspect your XP-58H for the correct UUID)
         const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb'); 
         
         // Use the correct Characteristic UUID for writing data
@@ -712,7 +716,7 @@ async function bluetoothPrint(rawReceipt) {
         showNotification("Success", "Print job sent successfully via Bluetooth!", 'success', 3000);
         
     } catch (error) {
-        showErrorAlert("Bluetooth Print Failed", "Error connecting or sending data. Check printer connection. Details: " + error.message);
+        showErrorAlert("Bluetooth Print Failed", "Kailangan mong mano-manong pumili ng printer. Error: " + error.message, 'error');
         console.error("Bluetooth print error:", error);
         // Fallback to standard print dialog
         printReceiptStandard();
@@ -875,6 +879,8 @@ function processPayment() {
     
     const change = Math.max(0, totalPaid - total);
     
+    const orderNotes = document.getElementById('orderNotes').value.trim(); // FIX: Get Notes
+
     const saleData = {
         items: cart.map(item => ({
             productId: item.originalProductId || item.productId,
@@ -888,7 +894,8 @@ function processPayment() {
         total: total,
         paymentMethod: selectedPaymentMethod,
         paymentAmounts: { ...paymentAmounts },
-        change: change
+        change: change,
+        notes: orderNotes // FIX: Save notes to sale data
     };
     
     try {
@@ -904,6 +911,7 @@ function processPayment() {
             
             cart = [];
             selectedDiscount = { type: 'none', amount: 0 };
+            document.getElementById('orderNotes').value = ''; // NEW: Clear notes after successful payment
             saveCart();
             updateCartDisplay();
             updateQueueDisplay(); // Update queue display
@@ -946,55 +954,6 @@ function closePaymentModal() {
     document.getElementById('paymentModal').style.display = 'none';
     
     console.log('Payment modal closed');
-}
-
-// UPDATED: updateQueueDisplay to target navbar button and new modal
-function updateQueueDisplay() {
-    const queueNavCount = document.getElementById('queueNavCount');
-    const queueModalCount = document.getElementById('queueModalCount');
-    const queueItemsModal = document.getElementById('queueItemsModal');
-    const activeQueue = getActiveQueue();
-    
-    // Update Navbar Button
-    const countText = `${activeQueue.length} order${activeQueue.length !== 1 ? 's' : ''}`;
-    if (queueNavCount) queueNavCount.textContent = countText;
-    
-    // Update Modal Title
-    if (queueModalCount) queueModalCount.textContent = countText;
-    
-    if (!queueItemsModal) return;
-
-    if (activeQueue.length === 0) {
-        queueItemsModal.innerHTML = '<div class="text-center" style="color: var(--secondary); padding: 40px;">No active orders</div>';
-        return;
-    }
-    
-    queueItemsModal.innerHTML = '';
-    activeQueue.forEach(item => {
-        const queueElement = document.createElement('div');
-        queueElement.className = 'queue-item';
-        queueElement.innerHTML = `
-            <div class="queue-number">Queue #${item.queueNumber.toString().padStart(3, '0')}</div>
-            <div class="queue-time">${new Date(item.timestamp).toLocaleTimeString('en-PH', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            })}</div>
-            <div class="queue-items-count">${item.items.length} item${item.items.length !== 1 ? 's' : ''}</div>
-            <div class="queue-total">₱${item.total.toFixed(2)}</div>
-            <div style="display:flex; gap: 8px;">
-                <button class="btn btn-outline btn-sm" onclick="openOrderDetailsModal(${item.queueNumber})">View Order</button>
-                <button class="btn btn-success btn-sm" onclick="completeOrder(${item.queueNumber})">Done</button>
-            </div>
-        `;
-        queueItemsModal.appendChild(queueElement);
-    });
-}
-
-function completeOrder(queueNumber) {
-    if (completeQueueItem(queueNumber)) {
-        updateQueueDisplay();
-        showNotification('Success', `Order #${queueNumber} completed!`, 'success');
-    }
 }
 
 // New: Queue Modal Functions
@@ -1225,6 +1184,17 @@ function openOrderDetailsModal(queueNumber) {
         `;
         content.appendChild(cartItem);
     });
+    
+    // NEW FIX: Add Notes display in red box
+    if (item.notes && item.notes.trim()) {
+        content.innerHTML += `
+            <div style="margin-top: 15px; padding: 10px; border: 2px solid var(--danger); background: #fef2f2; border-radius: 6px; color: var(--danger); font-weight: 600; font-size: 14px;">
+                ORDER NOTES: <br>
+                ${item.notes}
+            </div>
+        `;
+    }
+
     content.innerHTML += `
         <div class="cart-item" style="border-bottom: none; font-weight: bold; padding-top: 15px;">
             <div class="cart-item-info">

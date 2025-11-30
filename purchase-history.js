@@ -132,6 +132,7 @@ function loadSalesHistory(salesData) {
         salesHistory.innerHTML = '';
         
         if (salesData.length === 0) {
+            // FIX: Column count should be 5
             salesHistory.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--secondary);">No sales found for the selected criteria.</td></tr>`;
             return;
         }
@@ -141,13 +142,14 @@ function loadSalesHistory(salesData) {
             const saleDate = new Date(sale.timestamp);
             const timeString = saleDate.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
             
-            // FINAL FIX: Use <span> with display: block for vertical stacking of items within the Items column
+            // FIX: Use <span> with display: block for vertical stacking of items within the Items column
             const itemsString = sale.items.map(item => {
                 const product = products.find(p => p.id === item.productId);
                 return product ? `<span style="display: block;">${item.quantity}x ${product.name} (${item.size || 'N/A'})</span>` : 'Unknown Product';
             }).join('');
             
-            // FIXED: Proper table structure with button container div
+            // FINAL FIX: Tamang 5 columns (TDs) ang output para mag-align sa header.
+            // HEADERS: Time (1) | Items (2) | Total (3) | Payment (4) | Actions (5)
             row.innerHTML = `
                 <td><span style="display: block; white-space: nowrap;">${timeString}</span></td> 
                 <td>${itemsString}</td> 
@@ -360,7 +362,7 @@ function handleVoidSecurityCheck(event) {
                 if (saleIndex !== -1) {
                     const voidedSale = currentSales[saleIndex];
                     voidedSale.items.forEach(item => {
-                        const product = currentProducts.find(p => p.id === item.productId);
+                        const product = products.find(p => p.id === item.productId);
                         if (product) {
                             if (item.size && product.sizeStocks) {
                                 const currentSizeStock = parseInt(product.sizeStocks[item.size] || 0);
