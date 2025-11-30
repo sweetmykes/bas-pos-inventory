@@ -97,7 +97,6 @@ body {
     align-items: center;
     gap: 8px;
     height: 44px;
-    /* FIX: Ensure default button content is centered */
     justify-content: center; 
 }
 
@@ -140,7 +139,6 @@ body {
 /* POS Layout */
 .pos-layout {
     display: grid;
-    /* UPDATED: 2 columns for desktop */
     grid-template-columns: 1fr 400px; 
     gap: 24px;
     height: calc(100vh - 120px);
@@ -217,7 +215,6 @@ body {
     background: #f8fafc !important;
 }
 
-/* Make sure all category tabs have consistent styling */
 .category-tab .category-icon {
     font-size: 16px;
     flex-shrink: 0;
@@ -231,7 +228,7 @@ body {
     flex: 0 0 auto !important; 
     white-space: nowrap; 
 }
-/* Force consistent category styling */
+
 .category-tab .category-icon {
     font-size: 16px;
     flex-shrink: 0;
@@ -239,14 +236,12 @@ body {
     text-align: center;
 }
 
-/* Ensure all category text has same properties */
 [class*="category-"] span:not(.category-icon) {
     font-size: 14px !important;
     font-weight: 600 !important;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
 
-/* Remove any specific styling that might affect All Items differently */
 .category-tab:first-child {
     background: inherit !important;
     color: inherit !important;
@@ -321,12 +316,9 @@ body {
 .product-card.pink {
     border-left: 3px solid #ec4899;
 }
-
-/* Dagdag para sa Purple (Others) */
 .product-card.purple {
     border-left: 3px solid #8b5cf6;
 }
-
 
 .product-card:hover {
     transform: translateY(-1px);
@@ -641,7 +633,7 @@ body {
 .form-input {
     width: 100%;
     padding: 10px 12px;
-    border: 2px solid var(--border); /* Thicker border */
+    border: 2px solid var(--border);
     border-radius: var(--radius);
     font-size: 14px;
     transition: all 0.3s;
@@ -783,18 +775,15 @@ select.form-input {
     background: white;
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    /* FIX: Gawing scrollable ang container ng table */
     overflow-x: auto; 
     margin-top: 20px;
 }
 
 .table {
-    /* FIX: Hayaan ang table na mag-adjust sa content */
     width: 100%;
     border-collapse: collapse;
     background: white;
     border-radius: 8px;
-    /* TANGGALIN: overflow: hidden; */
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
@@ -805,14 +794,12 @@ select.form-input {
     font-weight: 600;
     color: #374151;
     border-bottom: 1px solid #e5e7eb;
-    /* Tiyakin na hindi magra-wrap ang headers sa desktop/tablet */
     white-space: nowrap; 
 }
 
 .table td {
     padding: 12px 15px;
     border-bottom: 1px solid #e5e7eb;
-    /* FINAL FIX: Allow wrapping for better alignment, especially in Inventory */
     white-space: normal; 
 }
 
@@ -1205,18 +1192,16 @@ select.form-input {
     background: white;
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    /* FIX: Gawing scrollable ang container ng table */
     overflow-x: auto; 
     display: block;
     width: 100%;
-    padding: 16px 0; /* Alisin ang padding sa gilid para mas makita ang table */
+    padding: 16px 0;
 }
 
 .history-items-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 16px;
-    /* FIX: Bigyan ng minimum width para mag-scroll at hindi mag-collapse */
     min-width: 780px; 
     margin-top: 0;
 }
@@ -1227,28 +1212,26 @@ select.form-input {
     text-align: left;
     border-bottom: 1px solid var(--border);
     vertical-align: top;
-    /* FINAL FIX: Allow wrapping for better alignment in Items/Time (Default is now normal) */
     white-space: normal; 
 }
-/* FIX: Specific Column Widths and White Space Control */
-.history-items-table th:nth-child(1), .history-items-table td:nth-child(1) { /* Time */
-    min-width: 100px;
-    white-space: nowrap; /* Prevent time from wrapping */
-}
-.history-items-table th:nth-child(2), .history-items-table td:nth-child(2) { /* Items */
-    min-width: 280px;
-}
-.history-items-table th:nth-child(3), .history-items-table td:nth-child(3) { /* Total */
+
+.history-items-table th:nth-child(1), .history-items-table td:nth-child(1) {
     min-width: 100px;
     white-space: nowrap;
 }
-.history-items-table th:nth-child(4), .history-items-table td:nth-child(4) { /* Payment */
+.history-items-table th:nth-child(2), .history-items-table td:nth-child(2) {
+    min-width: 280px;
+}
+.history-items-table th:nth-child(3), .history-items-table td:nth-child(3) {
+    min-width: 100px;
+    white-space: nowrap;
+}
+.history-items-table th:nth-child(4), .history-items-table td:nth-child(4) {
     min-width: 120px;
     white-space: nowrap; 
 }
-/* FINAL FIX: Apply flex to 5th TD for Actions column */
 .history-items-table th:nth-child(5),
-.history-items-table td:nth-child(5) { /* Actions Column */
+.history-items-table td:nth-child(5) {
     min-width: 180px; 
     white-space: nowrap; 
     display: flex; 
@@ -1487,43 +1470,60 @@ select.form-input {
     position: relative;
     z-index: 10;
 }
-/* Modern Receipt Styles */
+
+/* ==================== */
+/* 58MM RECEIPT STYLES */
+/* ==================== */
+
+/* 58mm Thermal Printer Receipt Styles - ADAPTIVE FONT SIZES */
 .modern-receipt {
-    width: 80mm;
+    width: 58mm !important;
+    max-width: 58mm !important;
+    min-width: 58mm !important;
     background: white;
-    padding: 15px;
-    font-family: 'Courier New', 'Monaco', monospace;
-    font-size: 12px;
-    line-height: 1.3;
+    padding: 3px !important;
+    font-family: 'Courier New', monospace;
+    line-height: 1.0 !important;
     color: #000;
     margin: 0 auto;
 }
 
-.receipt-header {
-    text-align: center;
-    margin-bottom: 8px;
-    padding-bottom: 8px;
-    border-bottom: 1px dashed #000;
+/* Base font sizes - maintain readability */
+.receipt-shop-name {
+    font-size: 11px !important;
+    font-weight: bold;
+    margin-bottom: 1px;
+    text-transform: uppercase;
+    line-height: 1.0;
+    word-wrap: break-word;
 }
 
-.receipt-shop-name {
-    font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 2px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+/* Adaptive sizing for long business names */
+.receipt-shop-name.medium-long {
+    font-size: 10px !important;
+}
+
+.receipt-shop-name.very-long {
+    font-size: 9px !important;
+}
+
+.receipt-shop-name.extremely-long {
+    font-size: 8px !important;
 }
 
 .receipt-address {
-    font-size: 10px;
+    font-size: 8px !important;
     color: #666;
+    line-height: 1.0;
+    margin-bottom: 2px;
+    word-wrap: break-word;
 }
 
 .receipt-info {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 8px;
-    font-size: 10px;
+    margin-bottom: 3px;
+    font-size: 8px !important;
     color: #666;
 }
 
@@ -1533,50 +1533,54 @@ select.form-input {
 
 .receipt-divider {
     border-bottom: 1px dashed #000;
-    margin: 8px 0;
+    margin: 2px 0;
     height: 1px;
 }
 
 .receipt-section-title {
     font-weight: bold;
-    font-size: 11px;
-    margin-bottom: 6px;
+    font-size: 9px !important;
+    margin-bottom: 2px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
-/* Items Styling */
+/* Items Styling - Maintain readability */
 .receipt-items {
-    margin-bottom: 10px;
+    margin-bottom: 3px;
 }
 
 .receipt-item {
-    margin-bottom: 8px;
+    margin-bottom: 2px;
 }
 
 .receipt-item-main {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 2px;
+    margin-bottom: 0px;
 }
 
 .receipt-item-name {
     flex: 1;
     font-weight: bold;
-    padding-right: 10px;
+    padding-right: 3px;
+    font-size: 9px !important;
+    line-height: 1.0;
+    word-wrap: break-word;
 }
 
 .receipt-item-qty {
     font-weight: bold;
     white-space: nowrap;
+    font-size: 9px !important;
 }
 
 .receipt-item-sub {
     display: flex;
     justify-content: space-between;
-    font-size: 10px;
+    font-size: 8px !important;
     color: #666;
+    margin-bottom: 1px;
 }
 
 .receipt-item-price {
@@ -1588,156 +1592,176 @@ select.form-input {
     white-space: nowrap;
 }
 
-/* Totals Styling */
+/* Totals Styling - Important numbers remain readable */
 .receipt-totals {
-    margin-bottom: 10px;
+    margin-bottom: 3px;
 }
 
 .receipt-total-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 4px;
-    font-size: 11px;
-}
-
-.receipt-discount {
-    color: #e74c3c;
-    font-weight: bold;
+    margin-bottom: 1px;
+    font-size: 9px !important;
 }
 
 .receipt-grand-total {
-    font-size: 14px;
+    font-size: 10px !important;
     font-weight: bold;
-    margin-top: 6px;
-    padding-top: 6px;
+    margin-top: 2px;
+    padding-top: 2px;
     border-top: 1px solid #000;
 }
 
 /* Payment Styling */
 .receipt-payment {
-    margin-bottom: 10px;
+    margin-bottom: 3px;
 }
 
 .receipt-payment-method {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 6px;
-    font-size: 11px;
+    margin-bottom: 2px;
+    font-size: 9px !important;
 }
 
 .payment-method-badge {
-    padding: 2px 6px;
-    border-radius: 10px;
-    font-size: 9px;
+    padding: 1px 3px;
+    border-radius: 6px;
+    font-size: 7px !important;
     font-weight: bold;
     text-transform: uppercase;
 }
 
-.payment-method-badge.cash {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.payment-method-badge.gcash {
-    background: #f3e8ff;
-    color: #7c3aed;
-}
-
-.payment-method-badge.multi {
-    background: linear-gradient(135deg, #dcfce7 50%, #f3e8ff 50%);
-    color: #166534;
-    border: 1px solid #bbf7d0;
-}
-
 .receipt-payment-methods {
-    font-size: 10px;
+    font-size: 8px !important;
 }
 
 .receipt-payment-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 2px;
+    margin-bottom: 0px;
 }
 
-/* Footer Styling */
+/* Footer Styling - Adaptive for long footers */
 .receipt-footer {
     text-align: center;
-    margin-top: 12px;
+    margin-top: 4px;
 }
 
 .receipt-thankyou {
     font-weight: bold;
-    margin-bottom: 4px;
-    font-size: 11px;
+    margin-bottom: 1px;
+    font-size: 9px !important;
+    line-height: 1.0;
+    word-wrap: break-word;
+}
+
+.receipt-thankyou.long-footer {
+    font-size: 8px !important;
+}
+
+.receipt-thankyou.very-long-footer {
+    font-size: 7px !important;
 }
 
 .receipt-greeting {
-    margin-bottom: 4px;
-    font-size: 10px;
+    margin-bottom: 1px;
+    font-size: 8px !important;
+    line-height: 1.0;
 }
 
-.receipt-return {
-    font-size: 8px;
-    color: #666;
+/* Queue Section */
+.receipt-queue {
+    text-align: center;
+    margin: 5px 0;
+    padding: 4px;
+    background: #f8fafc;
+    border-radius: 2px;
+    border: 1px dashed #3b82f6;
+}
+
+.queue-number-large {
+    font-size: 12px !important;
+    font-weight: bold;
+    color: var(--primary);
+    margin-bottom: 2px;
+}
+
+.queue-notice {
+    font-size: 8px !important;
+    color: var(--secondary);
+    font-style: italic;
+    line-height: 1.0;
+}
+
+/* Notes Section */
+.receipt-notes {
+    font-size: 8px !important;
     margin-top: 6px;
-    line-height: 1.2;
+    padding: 4px;
+    border-top: 1px dashed #ccc;
+    color: #ef4444;
+    word-wrap: break-word;
 }
 
-/* Barcode Styling */
-.receipt-barcode {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 2px;
-    margin-top: 15px;
-    padding-top: 10px;
-    border-top: 1px dashed #000;
-}
-
-.barcode-line {
-    width: 3px;
-    height: 25px;
-    background: #000;
-}
-
-.barcode-line.short {
-    height: 20px;
-}
-
-/* Print Styles for Receipt */
+/* Print Styles for 58mm - NO BORDER */
 @media print {
-    .modern-receipt {
-        width: 80mm !important;
-        margin: 0 !important;
-        padding: 10px !important;
-        box-shadow: none !important;
-        font-size: 11px !important;
-    }
-    
     body {
         margin: 0 !important;
         padding: 0 !important;
+        width: 58mm !important;
+        background: white !important;
+    }
+    
+    .modern-receipt {
+        width: 58mm !important;
+        max-width: 58mm !important;
+        min-width: 58mm !important;
+        margin: 0 !important;
+        padding: 2px !important;
+        box-shadow: none !important;
+        border: none !important;
+        background: white !important;
     }
     
     .no-print {
         display: none !important;
     }
+    
+    /* Remove any borders */
+    .receipt-header,
+    .receipt-queue,
+    .receipt-divider {
+        border: none !important;
+    }
+    
+    @page {
+        margin: 0 !important;
+        padding: 0 !important;
+        size: 58mm auto;
+    }
 }
 
-/* Receipt Modal Specific Styles */
+/* Fix for receipt modal display - NO BORDER */
 #receiptModal .modal-content {
-    max-width: 90mm;
-    padding: 20px;
+    max-width: 58mm;
+    padding: 5px;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 #receiptContent {
     max-height: 70vh;
     overflow-y: auto;
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 8px;
+    background: white !important;
+    padding: 10px;
+    border-radius: 0 !important;
+    display: flex;
+    justify-content: center;
+    border: none !important;
 }
+
 /* Dropdown Container */
 .category-dropdown {
     position: relative;
@@ -1745,7 +1769,6 @@ select.form-input {
     font-family: sans-serif;
 }
 
-/* The Main Button (Trigger) */
 .dropdown-btn {
     background-color: white;
     color: #333;
@@ -1758,44 +1781,40 @@ select.form-input {
     align-items: center;
     justify-content: space-between;
     gap: 15px;
-    min-width: 220px; /* Fixed width para pantay */
+    min-width: 220px;
     transition: all 0.3s;
     font-weight: 600;
 }
 
 .dropdown-btn:hover {
-    border-color: var(--primary, #3b82f6); /* Fallback color if var not defined */
+    border-color: var(--primary, #3b82f6);
     background-color: #f8fafc;
 }
 
-/* Arrow icon (caret) */
 .dropdown-btn::after {
     content: '▼';
     font-size: 10px;
     color: #666;
 }
 
-/* The Dropdown List (Hidden by default) */
 .dropdown-content {
     display: none;
     position: absolute;
     background-color: white;
-    min-width: 100%; /* Same width as button */
+    min-width: 100%;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
     z-index: 100;
     border-radius: 8px;
     border: 1px solid #eee;
     margin-top: 5px;
-    max-height: 300px; /* Scrollable if too many items */
+    max-height: 300px;
     overflow-y: auto;
 }
 
-/* Show class to display the list */
 .dropdown-content.show {
     display: block;
 }
 
-/* Individual Items */
 .dropdown-item {
     padding: 12px 16px;
     text-decoration: none;
@@ -1822,7 +1841,7 @@ select.form-input {
     font-weight: bold;
     color: var(--primary, #3b82f6);
 }
-/* --- 1. Animation para sa Dropdown List (Smooth Slide Down) --- */
+
 @keyframes dropdownSlide {
     from {
         opacity: 0;
@@ -1871,27 +1890,25 @@ select.form-input {
     color: #9ca3af;
     font-weight: normal;
 }
-/* Edit Icon Style */
 .edit-stock-btn {
     background: none;
     border: none;
     cursor: pointer;
     font-size: 12px;
-    color: var(--primary); /* Blue color */
+    color: var(--primary);
     padding: 2px 6px;
     margin-left: 5px;
     border-radius: 4px;
     transition: all 0.2s;
-    opacity: 0.6; /* Medyo transparent pag di naka-hover */
+    opacity: 0.6;
 }
 
 .edit-stock-btn:hover {
     background-color: #eff6ff;
     opacity: 1;
-    transform: scale(1.2); /* Lalaki konti pag tinutok */
+    transform: scale(1.2);
 }
 
-/* Row alignment for size stocks */
 .size-stock-row {
     display: flex;
     align-items: center;
@@ -1904,33 +1921,32 @@ select.form-input {
 .size-stock-row:last-child {
     border-bottom: none;
 }
-/* Custom Error Alert Theme */
+
 .modal-content.error-theme {
-    background-color: #fef2f2; /* Light Red Background */
-    border: 2px solid #ef4444; /* Red Border */
+    background-color: #fef2f2;
+    border: 2px solid #ef4444;
     box-shadow: 0 10px 25px rgba(239, 68, 68, 0.2);
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .error-title {
-    color: #991b1b; /* Dark Red Text */
+    color: #991b1b;
     font-size: 22px;
     font-weight: bold;
     margin-bottom: 8px;
 }
 
 .error-message {
-    color: #ef4444; /* Red Text */
+    color: #ef4444;
     font-size: 16px;
     font-weight: 500;
 }
 
-/* Animation para medyo tumalbog pag labas */
 @keyframes popIn {
     from { opacity: 0; transform: scale(0.8); }
     to { opacity: 1; transform: scale(1); }
 }
-/* Shop Settings Logo Uploader */
+
 .settings-logo-wrapper {
     position: relative;
     width: 100px;
@@ -1945,7 +1961,7 @@ select.form-input {
 #settingsLogoPreview {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Para hindi distorted ang image */
+    object-fit: cover;
 }
 
 .logo-edit-overlay {
@@ -1965,11 +1981,10 @@ select.form-input {
 }
 
 .settings-logo-wrapper:hover .logo-edit-overlay {
-    height: 100%; /* Sakupin buong circle pag hover */
+    height: 100%;
     font-size: 24px;
 }
 
-/* Credential Edit Fields */
 .input-with-edit {
     display: flex;
     align-items: flex-end;
@@ -1987,7 +2002,7 @@ select.form-input {
     align-items: center;
     justify-content: center;
     font-size: 16px;
-    margin-bottom: 2px; /* Align with input */
+    margin-bottom: 2px;
 }
 
 .btn-edit-field:hover {
@@ -1995,20 +2010,19 @@ select.form-input {
     border-color: var(--primary);
 }
 
-/* Visual cue pag na-enable na ang edit */
 .form-input:not([readonly]) {
     background: white !important;
     border-color: var(--primary) !important;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
-/* SHOP SETTINGS LOGO (Perfect Circle Fix) */
+
 .settings-logo-wrapper {
     position: relative;
-    width: 120px; /* Lakihan natin konti */
+    width: 120px;
     height: 120px;
     margin: 0 auto;
-    border-radius: 50%; /* Ito ang nagpapabilog sa container */
-    overflow: hidden;   /* Ito ang pumuputol sa image na lumalampas */
+    border-radius: 50%;
+    overflow: hidden;
     border: 3px solid var(--border);
     background: white;
 }
@@ -2047,7 +2061,7 @@ select.form-input {
         opacity: 0;
     }
     70% {
-        transform: scale(1.05); /* Slight bounce effect */
+        transform: scale(1.05);
         opacity: 1;
     }
     100% {
@@ -2058,13 +2072,11 @@ select.form-input {
 .pop-up-anim {
     animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
-/* Queue Panel Styles - UPDATED for Modal */
+
 .queue-panel {
-    /* REMOVED: No longer a fixed panel on the side */
     display: none; 
 }
 
-/* NEW: Style for Queue Items in the modal */
 .queue-items-modal {
     max-height: 50vh;
     overflow-y: auto;
@@ -2118,7 +2130,6 @@ select.form-input {
     justify-content: center;
 }
 
-/* Receipt Queue Number Styles */
 .receipt-queue {
     text-align: center;
     margin: 20px 0;
@@ -2141,16 +2152,13 @@ select.form-input {
     font-style: italic;
 }
 
-/* Update POS layout to reflect 2 columns */
 .pos-layout {
     display: grid;
-    /* UPDATED: 2 columns for desktop */
     grid-template-columns: 1fr 400px; 
     gap: 24px;
     height: calc(100vh - 120px);
 }
 
-/* Remove barcode styles */
 .receipt-barcode {
     display: none;
 }
@@ -2158,266 +2166,9 @@ select.form-input {
     text-align: center;
     margin-top: 12px;
 }
-/* 58mm Thermal Printer Receipt Styles */
-.modern-receipt {
-    width: 58mm !important;
-    max-width: 58mm !important;
-    min-width: 58mm !important;
-    background: white;
-    padding: 8px !important;
-    font-family: 'Courier New', monospace;
-    font-size: 10px !important;
-    line-height: 1.1 !important;
-    color: #000;
-    margin: 0 auto;
-}
-
-.receipt-header {
-    text-align: center;
-    margin-bottom: 6px;
-    padding-bottom: 4px;
-    border-bottom: 1px dashed #000;
-}
-
-.receipt-shop-name {
-    font-size: 12px !important;
-    font-weight: bold;
-    margin-bottom: 2px;
-    text-transform: uppercase;
-}
-
-.receipt-address {
-    font-size: 8px !important;
-    color: #666;
-    line-height: 1;
-}
-
-.receipt-info {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 6px;
-    font-size: 8px !important;
-    color: #666;
-}
-
-.receipt-date, .receipt-transaction {
-    font-weight: bold;
-}
-
-.receipt-divider {
-    border-bottom: 1px dashed #000;
-    margin: 4px 0;
-    height: 1px;
-}
-
-.receipt-section-title {
-    font-weight: bold;
-    font-size: 9px !important;
-    margin-bottom: 4px;
-    text-transform: uppercase;
-}
-
-/* Items Styling - More Compact */
-.receipt-items {
-    margin-bottom: 6px;
-}
-
-.receipt-item {
-    margin-bottom: 4px;
-}
-
-.receipt-item-main {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1px;
-}
-
-.receipt-item-name {
-    flex: 1;
-    font-weight: bold;
-    padding-right: 5px;
-    font-size: 9px !important;
-    line-height: 1.1;
-}
-
-.receipt-item-qty {
-    font-weight: bold;
-    white-space: nowrap;
-    font-size: 9px !important;
-}
-
-.receipt-item-sub {
-    display: flex;
-    justify-content: space-between;
-    font-size: 8px !important;
-    color: #666;
-}
-
-.receipt-item-price {
-    flex: 1;
-}
-
-.receipt-item-total {
-    font-weight: bold;
-    white-space: nowrap;
-}
-
-/* Totals Styling - More Compact */
-.receipt-totals {
-    margin-bottom: 6px;
-}
-
-.receipt-total-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 2px;
-    font-size: 9px !important;
-}
-
-.receipt-discount {
-    color: #e74c3c;
-    font-weight: bold;
-}
-
-.receipt-grand-total {
-    font-size: 11px !important;
-    font-weight: bold;
-    margin-top: 4px;
-    padding-top: 4px;
-    border-top: 1px solid #000;
-}
-
-/* Payment Styling - More Compact */
-.receipt-payment {
-    margin-bottom: 6px;
-}
-
-.receipt-payment-method {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 4px;
-    font-size: 9px !important;
-}
-
-.payment-method-badge {
-    padding: 1px 4px;
-    border-radius: 8px;
-    font-size: 7px !important;
-    font-weight: bold;
-    text-transform: uppercase;
-}
-
-.receipt-payment-methods {
-    font-size: 8px !important;
-}
-
-.receipt-payment-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 1px;
-}
-
-/* Footer Styling - More Compact */
-.receipt-footer {
-    text-align: center;
-    margin-top: 8px;
-}
-
-.receipt-thankyou {
-    font-weight: bold;
-    margin-bottom: 2px;
-    font-size: 9px !important;
-}
-
-.receipt-greeting {
-    margin-bottom: 2px;
-    font-size: 8px !important;
-}
-
-/* Queue Section - More Compact */
-.receipt-queue {
-    text-align: center;
-    margin: 10px 0;
-    padding: 8px;
-    background: #f8fafc;
-    border-radius: 4px;
-    border: 1px dashed #3b82f6;
-}
-
-.queue-number-large {
-    font-size: 14px !important;
-    font-weight: bold;
-    color: var(--primary);
-    margin-bottom: 4px;
-}
-
-.queue-notice {
-    font-size: 8px !important;
-    color: var(--secondary);
-    font-style: italic;
-}
-
-/* Notes Section - More Compact */
-.receipt-notes {
-    font-size: 8px !important;
-    margin-top: 6px;
-    padding: 4px;
-    border-top: 1px dashed #ccc;
-    color: #ef4444;
-    word-wrap: break-word;
-}
-
-/* Print Styles for 58mm */
-@media print {
-    body {
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 58mm !important;
-    }
-    
-    .modern-receipt {
-        width: 58mm !important;
-        max-width: 58mm !important;
-        min-width: 58mm !important;
-        margin: 0 !important;
-        padding: 5px !important;
-        box-shadow: none !important;
-        font-size: 10px !important;
-        line-height: 1.1 !important;
-    }
-    
-    .no-print {
-        display: none !important;
-    }
-    
-    /* Ensure everything fits within 58mm */
-    * {
-        max-width: 58mm !important;
-    }
-}
-
-/* Fix for receipt modal display */
-#receiptModal .modal-content {
-    max-width: 58mm;
-    padding: 10px;
-}
-
-#receiptContent {
-    max-height: 70vh;
-    overflow-y: auto;
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    display: flex;
-    justify-content: center;
-}
-
 
 /* Responsive */
 @media (max-width: 1024px) {
-    /* For medium tablets/laptops, slightly reduce fixed column */
     .pos-layout {
         grid-template-columns: 1fr 350px; 
         gap: 16px;
@@ -2429,21 +2180,18 @@ select.form-input {
 
 @media (max-width: 768px) {
     .pos-layout {
-        /* Stack all columns vertically on smaller screens */
         grid-template-columns: 1fr;
         height: auto;
         gap: 24px;
     }
     
     .cart-panel {
-        /* FIX: Changed fixed height to auto/max-height for better flow */
         height: auto; 
         max-height: 80vh; 
-        margin-bottom: 24px; /* Added spacing after cart */
+        margin-bottom: 24px;
     }
     
     .queue-panel {
-        /* REMOVED: No longer applicable to a modal */
         width: 100%; 
         margin-left: 0; 
         height: auto; 
@@ -2455,56 +2203,52 @@ select.form-input {
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     }
     
-    /* FIX: Inventory Table Container Scrolling */
     .inventory-table {
         overflow-x: auto;
         display: block;
         width: 100%;
     }
     
-    /* FIX: History Table Container Scrolling */
     .history-details {
         overflow-x: auto;
         display: block;
         width: 100%;
-        padding: 16px 0; /* Alisin ang padding sa gilid para mas makita ang table */
+        padding: 16px 0;
     }
     
     .history-items-table {
-        /* FIX: Bigyan ng minimum width para mag-scroll at hindi mag-collapse */
-        min-width: 780px; /* Consistent min-width */
+        min-width: 780px;
         margin-top: 0;
     }
     
     .table th, .table td {
-        /* Hayaan ang lamen na mag-adjust, tanggalin ang fixed min-width */
         padding: 10px 12px; 
-        white-space: normal; /* FINAL FIX: Allow wrapping for better alignment in Inventory */
+        white-space: normal;
     }
 
     .history-items-table th,
     .history-items-table td {
         white-space: normal;
     }
-    /* FIX: Specific Column Widths and White Space Control */
-    .history-items-table th:nth-child(1), .history-items-table td:nth-child(1) { /* Time */
+    
+    .history-items-table th:nth-child(1), .history-items-table td:nth-child(1) {
         min-width: 100px;
         white-space: nowrap; 
     }
-    .history-items-table th:nth-child(2), .history-items-table td:nth-child(2) { /* Items */
+    .history-items-table th:nth-child(2), .history-items-table td:nth-child(2) {
         min-width: 280px;
     }
-    .history-items-table th:nth-child(3), .history-items-table td:nth-child(3) { /* Total */
+    .history-items-table th:nth-child(3), .history-items-table td:nth-child(3) {
         min-width: 100px;
         white-space: nowrap;
     }
-    .history-items-table th:nth-child(4), .history-items-table td:nth-child(4) { /* Payment */
+    .history-items-table th:nth-child(4), .history-items-table td:nth-child(4) {
         min-width: 120px;
         white-space: nowrap; 
     }
-    /* FINAL FIX: Apply flex to 5th TD for Actions column */
+    
     .history-items-table th:nth-child(5),
-    .history-items-table td:nth-child(5) { /* Actions Column */
+    .history-items-table td:nth-child(5) {
         min-width: 180px; 
         white-space: nowrap; 
         display: flex; 
@@ -2515,13 +2259,12 @@ select.form-input {
     }
 
     .history-items-table .btn-sm {
-        padding: 4px 8px; /* Mas maliit na padding */
-        font-size: 10px; /* Mas maliit na font */
+        padding: 4px 8px;
+        font-size: 10px;
         height: 28px;
     }
     
     .nav {
-        /* Make nav buttons wrap on two lines if needed */
         flex-wrap: wrap;
         justify-content: center;
         width: 100%;
@@ -2532,11 +2275,10 @@ select.form-input {
         padding: 8px 12px;
         font-size: 12px;
         height: 38px;
-        justify-content: center; /* FIX: Ensure button text is centered */
+        justify-content: center;
     }
     
     .header-content {
-        /* Stack logo and nav vertically */
         flex-direction: column;
         gap: 16px;
         height: auto;
@@ -2544,7 +2286,7 @@ select.form-input {
     }
     
     .logo-text {
-        font-size: 24px; /* Smaller logo text */
+        font-size: 24px;
     }
     
     .notification {
@@ -2581,16 +2323,14 @@ select.form-input {
         flex: 1;
     }
     
-    /* FIX: Button Alignment in Confirmation Modals */
     #customConfirmModal > .modal-content > div:last-child {
-        /* Target the div containing the buttons inside the modal-content */
         display: flex;
         gap: 10px; 
         justify-content: center;
     }
 
     #customConfirmModal .btn, .history-items-table .btn-outline {
-        min-width: 120px; /* Pantayin ang lapad */
+        min-width: 120px;
         height: 44px;
         justify-content: center;
     }
@@ -2598,7 +2338,6 @@ select.form-input {
 
 @media (max-width: 480px) {
     .products-grid {
-        /* Even smaller grid columns for small phone screens */
         grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
         gap: 6px;
     }
@@ -2625,7 +2364,6 @@ select.form-input {
 .mt-4 { margin-top: 16px; }
 .hidden { display: none; }
 
-/* Force consistent styling for all category elements */
 [class*="category-"] {
     font-size: 14px !important;
     font-weight: 600 !important;

@@ -932,8 +932,7 @@ window.completeOrder = function(queueNumber) {
         showNotification('Success', `Order #${queueNumber} completed!`, 'success');
     }
 }
-
-// Update receipt to show queue number instead of barcode
+// UPDATED SHOW RECEIPT FUNCTION WITH ADAPTIVE SIZING
 function showReceipt(saleData) {
     const receiptContent = document.getElementById('receiptContent');
     
@@ -956,24 +955,127 @@ function showReceipt(saleData) {
             `;
         }
     });
-    
-    // NEW FIX: Add Notes to receipt HTML
-    let notesHTML = '';
-    if (saleData.notes && saleData.notes.trim()) {
-        notesHTML = `
-            <div style="font-size: 11px; margin-top: 10px; padding: 5px; border-top: 1px dashed #ccc; color: #ef4444;">
-                <p>NOTES: ${saleData.notes}</p>
-            </div>
-        `;
+
+    // ADAPTIVE FONT SIZING FOR BUSINESS NAME
+    const shopName = shopInfo.name || '';
+    let shopNameClass = '';
+    if (shopName.length > 25) {
+        shopNameClass = 'extremely-long';
+    } else if (shopName.length > 20) {
+        shopNameClass = 'very-long';
+    } else if (shopName.length > 15) {
+        shopNameClass = 'medium-long';
     }
 
-    let paymentHTML = '';
+    // ADAPTIVE FONT SIZING FOR FOOTER
+    const shopFooter = shopInfo.receiptFooter || '';
+    let footerClass = '';
+    if (shopFooter.length > 40) {
+        footerClass = 'very-long-footer';
+    } else if (shopFooter.length > 25) {
+        footerClass = 'long-footer';
+    }
+
+    const shopAddress = shopInfo.address || '';
+    const receiptId = (saleData.id || '000001').toString().slice(-6);
+
+    const now = new Date();
+    const dateString = now.toLocaleDateString('en-PH', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit' 
+    });
+    const timeString = now.toLocaleTimeString('en-PH', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+
+    receiptContent.innerHTML = `
+        <div class="modern-receipt">
+            <!-- Business Header -->
+            <div class="receipt-header">
+                <div class="receipt-shop-name ${shopNameClass}">${shopName}</div>
+                ${shopAddress ? `<div class="receipt-address">${shopAddress}</div>` : ''}
+            </div>
+            
+            <!-- Date & Receipt Info -->
+            <div class="receipt-info">
+                <div class="receipt-date">${dateString} ${timeString}</div>
+                <div class="receipt-transaction">#${receiptId}</div>
+            </div>
+            
+            <div class="receipt-divider"></div>
+            
+            <!-- Items -->
+            <div class="receipt-items">
+                <div class="receipt-section-title">ITEMS</div>
+                ${itemsHTML}
+            </div>
+            
+            <div class="receipt-divider"></div>
+            
+            <!-- Totals -->
+            <div class="receipt-totals">
+                <div class="receipt-total-row">
+                    <span>Subtotal:</span>
+                    <span>₱${saleData.subtotal.toFixed(2)}</span>
+                </div>
+                ${saleData.discount > 0 ? `
+                <div class="receipt-total-row receipt-discount">
+                    <span>Discount (${saleData.discountType.toUpperCase()}):</span>
+                    <span>-₱${saleData.discount.toFixed(2)}</span>
+                </div>
+                ` : ''}
+                <div class="receipt-total-row receipt-grand-total">
+                    <span>TOTAL:</span>
+                    <span>₱${saleData.total.toFixed(2)}</span>
+                </div>
+            </div>
+            
+            <!-- Payment -->
+            <div class="receipt-payment">
+                <div class="receipt-section-title">PAYMENT</div>
+                <div class="receipt-payment-method">
+                    <span>Method:</span>
+                    <span class="payment-method-badge ${saleData.paymentMethod}">${saleData.paymentMethod.toUpperCase()}</span>
+                </div>
+                ${getPaymentHTML(saleData)}
+            </div>
+            
+            <div class="receipt-divider"></div>
+            
+            <!-- Footer -->
+            <div class="receipt-footer">
+                ${shopFooter ? `<div class="receipt-thankyou ${footerClass}">${shopFooter}</div>` : ''}
+                <div class="receipt-greeting">Thank you!</div>
+            </div>
+            
+            <!-- Queue Number -->
+            <div class="receipt-queue">
+                <div class="queue-number-large">Queue #${lastQueueNumber.toString().padStart(3, '0')}</div>
+                <div class="queue-notice">Please wait for your number</div>
+            </div>
+            
+            <!-- Notes -->
+            ${saleData.notes && saleData.notes.trim() ? `
+            <div class="receipt-notes">
+                <strong>NOTES:</strong> ${saleData.notes}
+            </div>
+            ` : ''}
+        </div>
+    `;
+    
+    document.getElementById('receiptModal').style.display = 'flex';
+}
+
+// Helper function for payment HTML (keep existing)
+function getPaymentHTML(saleData) {
     const paidAmount = saleData.paymentMethod === 'cash' ? 
         (saleData.paymentAmounts?.cash || saleData.total) : 
         (saleData.paymentAmounts?.gcash || saleData.total);
     
     if (saleData.paymentMethod === 'multi' && saleData.paymentAmounts) {
-        paymentHTML = `
+        return `
             <div class="receipt-payment-methods">
                 <div class="receipt-payment-row">
                     <span>Cash:</span>
@@ -992,7 +1094,7 @@ function showReceipt(saleData) {
             </div>
         `;
     } else {
-        paymentHTML = `
+        return `
             <div class="receipt-payment-methods">
                 <div class="receipt-payment-row">
                     <span>${saleData.paymentMethod.toUpperCase()} Paid:</span>
@@ -1007,85 +1109,49 @@ function showReceipt(saleData) {
             </div>
         `;
     }
+}
+
+// Helper function for payment HTML
+function getPaymentHTML(saleData) {
+    const paidAmount = saleData.paymentMethod === 'cash' ? 
+        (saleData.paymentAmounts?.cash || saleData.total) : 
+        (saleData.paymentAmounts?.gcash || saleData.total);
     
-    const shopName = shopInfo.name || '';
-    const shopAddress = shopInfo.address || '';
-    const shopFooter = shopInfo.receiptFooter || '';
-
-    const now = new Date();
-    const dateString = now.toLocaleDateString('en-PH', { 
-        year: 'numeric', 
-        month: '2-digit', 
-        day: '2-digit' 
-    });
-    const timeString = now.toLocaleTimeString('en-PH', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-    });
-
-    receiptContent.innerHTML = `
-        <div class="modern-receipt">
-            <div class="receipt-header">
-                <div class="receipt-shop-name">${shopName}</div>
-                <div class="receipt-address">${shopAddress}</div>
-            </div>
-            
-            <div class="receipt-info">
-                <div class="receipt-date">${dateString} ${timeString}</div>
-                <div class="receipt-transaction">Receipt #: ${saleData.id || '000001'}</div>
-            </div>
-            
-            <div class="receipt-divider"></div>
-            
-            <div class="receipt-items">
-                <div class="receipt-section-title">ITEMS</div>
-                ${itemsHTML}
-            </div>
-            
-            <div class="receipt-divider"></div>
-            
-            <div class="receipt-totals">
-                <div class="receipt-total-row">
-                    <span>Subtotal:</span>
-                    <span>₱${saleData.subtotal.toFixed(2)}</span>
+    if (saleData.paymentMethod === 'multi' && saleData.paymentAmounts) {
+        return `
+            <div class="receipt-payment-methods">
+                <div class="receipt-payment-row">
+                    <span>Cash:</span>
+                    <span>₱${saleData.paymentAmounts.cash.toFixed(2)}</span>
                 </div>
-                ${saleData.discount > 0 ? `
-                <div class="receipt-total-row receipt-discount">
-                    <span>Discount (${saleData.discountType.toUpperCase()}):</span>
-                    <span>-₱${saleData.discount.toFixed(2)}</span>
+                <div class="receipt-payment-row">
+                    <span>GCash:</span>
+                    <span>₱${saleData.paymentAmounts.gcash.toFixed(2)}</span>
+                </div>
+                ${(saleData.paymentAmounts.cash + saleData.paymentAmounts.gcash) > saleData.total ? `
+                <div class="receipt-payment-row">
+                    <span>Change:</span>
+                    <span>₱${((saleData.paymentAmounts.cash + saleData.paymentAmounts.gcash) - saleData.total).toFixed(2)}</span>
                 </div>
                 ` : ''}
-                <div class="receipt-total-row receipt-grand-total">
-                    <span>TOTAL:</span>
-                    <span>₱${saleData.total.toFixed(2)}</span>
+            </div>
+        `;
+    } else {
+        return `
+            <div class="receipt-payment-methods">
+                <div class="receipt-payment-row">
+                    <span>${saleData.paymentMethod.toUpperCase()} Paid:</span>
+                    <span>₱${paidAmount.toFixed(2)}</span>
                 </div>
-            </div>
-            
-            <div class="receipt-payment">
-                <div class="receipt-section-title">PAYMENT</div>
-                <div class="receipt-payment-method">
-                    <span>Method:</span>
-                    <span class="payment-method-badge ${saleData.paymentMethod}">${saleData.paymentMethod.toUpperCase()}</span>
+                ${paidAmount > saleData.total ? `
+                <div class="receipt-payment-row">
+                    <span>Change:</span>
+                    <span>₱${(paidAmount - saleData.total).toFixed(2)}</span>
                 </div>
-                ${paymentHTML}
+                ` : ''}
             </div>
-            
-            <div class="receipt-divider"></div>
-            
-            <div class="receipt-footer">
-                <div class="receipt-thankyou">${shopFooter}</div>
-                <b><div class="receipt-greeting">Thank you for your purchase!</div></b>
-            </div>
-            
-            <div class="receipt-divider"></div>
-
-            <div class="receipt-queue">
-                <div class="queue-number-large">Queue #${lastQueueNumber.toString().padStart(3, '0')}</div>
-                <div class="queue-notice">Please wait for your number to be called</div>
-            </div>
-            ${notesHTML} `;
-    
-    document.getElementById('receiptModal').style.display = 'flex';
+        `;
+    }
 }
 
 function closeReceiptModal() {
