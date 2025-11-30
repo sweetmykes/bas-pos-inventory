@@ -683,30 +683,186 @@ function printReceipt() {
 
 // PINAKAMABILIS NA PRINT FUNCTION
 function printReceiptStandard() {
+    console.log('=== PRINT RECEIPT CALLED ===');
+    
+    // Method 1: Use the receipt modal content
     const receiptElement = document.querySelector('.modern-receipt');
+    
     if (!receiptElement) {
-        showErrorAlert('Print Error', 'Receipt content not found for printing.');
+        console.error('Receipt element not found in modal');
+        // Method 2: Try to generate receipt from last sale data
+        if (window.lastProcessedSaleData) {
+            generateReceiptFromSaleData();
+            return;
+        } else {
+            showErrorAlert('Print Error', 'No receipt data available for printing.');
+            return;
+        }
+    }
+    
+    // CREATE A SEPARATE PRINT WINDOW WITH ONLY RECEIPT CONTENT
+    const printWindow = window.open('', '_blank', 'width=350,height=700');
+    
+    if (!printWindow) {
+        showErrorAlert('Print Error', 'Please allow popups for printing.');
         return;
     }
     
-    // DIRECT PRINT - WALANG POPUP, WALANG IFRAME
-    const printContent = receiptElement.outerHTML;
-    const originalContent = document.body.innerHTML;
-    
-    // TEMPORARY SWAP CONTENT
-    document.body.innerHTML = `
-        <div style="width: 80mm; margin: 0 auto; font-family: 'Courier New'; padding: 10px;">
-            ${printContent}
-        </div>
+    // SIMPLE RECEIPT STYLING FOR THERMAL PRINTER
+    const receiptHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Receipt</title>
+            <meta charset="UTF-8">
+            <style>
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+                body {
+                    font-family: 'Courier New', Courier, monospace;
+                    font-size: 12px;
+                    line-height: 1.2;
+                    width: 80mm;
+                    margin: 0 auto;
+                    padding: 5px;
+                    color: #000;
+                    background: white;
+                }
+                .receipt-header {
+                    text-align: center;
+                    margin-bottom: 8px;
+                    padding-bottom: 5px;
+                    border-bottom: 1px dashed #000;
+                }
+                .receipt-shop-name {
+                    font-weight: bold;
+                    font-size: 14px;
+                    margin-bottom: 2px;
+                }
+                .receipt-address {
+                    font-size: 10px;
+                }
+                .receipt-info {
+                    text-align: center;
+                    font-size: 10px;
+                    margin-bottom: 8px;
+                }
+                .receipt-divider {
+                    border-top: 1px dashed #000;
+                    margin: 5px 0;
+                }
+                .receipt-section-title {
+                    font-weight: bold;
+                    margin-bottom: 3px;
+                    text-align: center;
+                }
+                .receipt-item {
+                    margin-bottom: 4px;
+                }
+                .receipt-item-main {
+                    display: flex;
+                    justify-content: space-between;
+                }
+                .receipt-item-sub {
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 10px;
+                    color: #666;
+                }
+                .receipt-totals {
+                    margin: 8px 0;
+                }
+                .receipt-total-row {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 2px;
+                }
+                .receipt-grand-total {
+                    font-weight: bold;
+                    font-size: 13px;
+                    border-top: 1px solid #000;
+                    padding-top: 4px;
+                    margin-top: 4px;
+                }
+                .receipt-payment-method {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 3px;
+                }
+                .payment-method-badge {
+                    font-weight: bold;
+                }
+                .receipt-payment-row {
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 11px;
+                    margin-bottom: 1px;
+                }
+                .receipt-footer {
+                    text-align: center;
+                    margin: 8px 0;
+                }
+                .receipt-thankyou {
+                    font-size: 10px;
+                    margin-bottom: 3px;
+                }
+                .receipt-greeting {
+                    font-weight: bold;
+                    font-size: 11px;
+                }
+                .receipt-queue {
+                    text-align: center;
+                    margin: 10px 0;
+                    padding: 8px;
+                    border: 1px dashed #000;
+                }
+                .queue-number-large {
+                    font-size: 18px;
+                    font-weight: bold;
+                    margin-bottom: 3px;
+                }
+                .queue-notice {
+                    font-size: 10px;
+                }
+                .notes-section {
+                    font-size: 10px;
+                    margin-top: 5px;
+                    padding: 3px;
+                    border-top: 1px dashed #ccc;
+                    color: #f00;
+                }
+                @media print {
+                    body {
+                        width: 80mm;
+                        margin: 0;
+                        padding: 5px;
+                    }
+                    .modern-receipt {
+                        width: 80mm;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            ${receiptElement.outerHTML}
+            <script>
+                // AUTO PRINT AND CLOSE
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() {
+                        window.close();
+                    }, 100);
+                };
+            </script>
+        </body>
+        </html>
     `;
     
-    // IMMEDIATE PRINT
-    window.print();
-    
-    // IMMEDIATE RELOAD - WALANG DELAY
-    setTimeout(() => {
-        window.location.reload();
-    }, 50);
+    printWindow.document.write(receiptHTML);
+    printWindow.document.close();
 }
 
 
@@ -735,7 +891,7 @@ function processPayment() {
     
     const change = Math.max(0, totalPaid - total);
     
-    const orderNotes = document.getElementById('orderNotes').value.trim(); // FIX: Get Notes
+    const orderNotes = document.getElementById('orderNotes').value.trim();
 
     const saleData = {
         items: cart.map(item => ({
@@ -751,7 +907,7 @@ function processPayment() {
         paymentMethod: selectedPaymentMethod,
         paymentAmounts: { ...paymentAmounts },
         change: change,
-        notes: orderNotes // FIX: Save notes to sale data
+        notes: orderNotes
     };
     
     try {
@@ -761,21 +917,28 @@ function processPayment() {
             // Add to queue
             addToQueue(sale);
             
-            window.lastProcessedSaleData = sale; // NEW: Store sale data globally
+            window.lastProcessedSaleData = sale; // Store sale data globally
             
+            // IMPORTANT: Show receipt FIRST before printing
             showReceipt(sale);
             
             cart = [];
             selectedDiscount = { type: 'none', amount: 0 };
-            document.getElementById('orderNotes').value = ''; // NEW: Clear notes after successful payment
+            document.getElementById('orderNotes').value = '';
             saveCart();
             updateCartDisplay();
-            window.updateQueueDisplay(); // FIX: Call global queue display
+            window.updateQueueDisplay();
             resetDiscountButtons();
             loadProducts();
             
             closePaymentModal();
             showNotification('Success', `Payment processed! Queue #${lastQueueNumber}`, 'success');
+            
+            // AUTO PRINT AFTER SHOWING RECEIPT
+            setTimeout(() => {
+                printReceiptStandard();
+            }, 500);
+            
         } else {
             showNotification('Error', 'Failed to process payment! Please try again.', 'error');
         }
@@ -1129,6 +1292,213 @@ function openOrderDetailsModal(queueNumber) {
 }
 function closeOrderDetailsModal() {
     document.getElementById('orderDetailsModal').style.display = 'none';
+}
+function generateReceiptFromSaleData() {
+    if (!window.lastProcessedSaleData) {
+        showErrorAlert('Print Error', 'No sale data available for printing.');
+        return;
+    }
+    
+    const saleData = window.lastProcessedSaleData;
+    const printWindow = window.open('', '_blank', 'width=350,height=700');
+    
+    if (!printWindow) {
+        showErrorAlert('Print Error', 'Please allow popups for printing.');
+        return;
+    }
+    
+    // GENERATE RECEIPT HTML FROM SALE DATA
+    let itemsHTML = '';
+    saleData.items.forEach(item => {
+        const product = products.find(p => p.id === item.productId);
+        if (product) {
+            const displayName = item.size ? `${product.name} (${item.size})` : product.name;
+            itemsHTML += `
+                <div class="receipt-item">
+                    <div class="receipt-item-main">
+                        <span class="receipt-item-name">${displayName}</span>
+                        <span class="receipt-item-qty">${item.quantity}x</span>
+                    </div>
+                    <div class="receipt-item-sub">
+                        <span class="receipt-item-price">@₱${item.price.toFixed(2)}</span>
+                        <span class="receipt-item-total">₱${(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    let paymentHTML = '';
+    const paidAmount = saleData.paymentMethod === 'cash' ? 
+        (saleData.paymentAmounts?.cash || saleData.total) : 
+        (saleData.paymentAmounts?.gcash || saleData.total);
+    
+    if (saleData.paymentMethod === 'multi' && saleData.paymentAmounts) {
+        paymentHTML = `
+            <div class="receipt-payment-methods">
+                <div class="receipt-payment-row">
+                    <span>Cash:</span>
+                    <span>₱${saleData.paymentAmounts.cash.toFixed(2)}</span>
+                </div>
+                <div class="receipt-payment-row">
+                    <span>GCash:</span>
+                    <span>₱${saleData.paymentAmounts.gcash.toFixed(2)}</span>
+                </div>
+                ${(saleData.paymentAmounts.cash + saleData.paymentAmounts.gcash) > saleData.total ? `
+                <div class="receipt-payment-row">
+                    <span>Change:</span>
+                    <span>₱${((saleData.paymentAmounts.cash + saleData.paymentAmounts.gcash) - saleData.total).toFixed(2)}</span>
+                </div>
+                ` : ''}
+            </div>
+        `;
+    } else {
+        paymentHTML = `
+            <div class="receipt-payment-methods">
+                <div class="receipt-payment-row">
+                    <span>${saleData.paymentMethod.toUpperCase()} Paid:</span>
+                    <span>₱${paidAmount.toFixed(2)}</span>
+                </div>
+                ${paidAmount > saleData.total ? `
+                <div class="receipt-payment-row">
+                    <span>Change:</span>
+                    <span>₱${(paidAmount - saleData.total).toFixed(2)}</span>
+                </div>
+                ` : ''}
+            </div>
+        `;
+    }
+    
+    let notesHTML = '';
+    if (saleData.notes && saleData.notes.trim()) {
+        notesHTML = `<div class="notes-section">NOTES: ${saleData.notes}</div>`;
+    }
+
+    const shopName = shopInfo.name || '';
+    const shopAddress = shopInfo.address || '';
+    const shopFooter = shopInfo.receiptFooter || '';
+
+    const now = new Date();
+    const dateString = now.toLocaleDateString('en-PH', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit' 
+    });
+    const timeString = now.toLocaleTimeString('en-PH', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+
+    const receiptHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Receipt</title>
+            <style>
+                /* SAME STYLES AS ABOVE */
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.2; width: 80mm; margin: 0 auto; padding: 5px; color: #000; background: white; }
+                .receipt-header { text-align: center; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px dashed #000; }
+                .receipt-shop-name { font-weight: bold; font-size: 14px; margin-bottom: 2px; }
+                .receipt-address { font-size: 10px; }
+                .receipt-info { text-align: center; font-size: 10px; margin-bottom: 8px; }
+                .receipt-divider { border-top: 1px dashed #000; margin: 5px 0; }
+                .receipt-section-title { font-weight: bold; margin-bottom: 3px; text-align: center; }
+                .receipt-item { margin-bottom: 4px; }
+                .receipt-item-main { display: flex; justify-content: space-between; }
+                .receipt-item-sub { display: flex; justify-content: space-between; font-size: 10px; color: #666; }
+                .receipt-totals { margin: 8px 0; }
+                .receipt-total-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+                .receipt-grand-total { font-weight: bold; font-size: 13px; border-top: 1px solid #000; padding-top: 4px; margin-top: 4px; }
+                .receipt-payment-method { display: flex; justify-content: space-between; margin-bottom: 3px; }
+                .payment-method-badge { font-weight: bold; }
+                .receipt-payment-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 1px; }
+                .receipt-footer { text-align: center; margin: 8px 0; }
+                .receipt-thankyou { font-size: 10px; margin-bottom: 3px; }
+                .receipt-greeting { font-weight: bold; font-size: 11px; }
+                .receipt-queue { text-align: center; margin: 10px 0; padding: 8px; border: 1px dashed #000; }
+                .queue-number-large { font-size: 18px; font-weight: bold; margin-bottom: 3px; }
+                .queue-notice { font-size: 10px; }
+                .notes-section { font-size: 10px; margin-top: 5px; padding: 3px; border-top: 1px dashed #ccc; color: #f00; }
+                @media print { body { width: 80mm; margin: 0; padding: 5px; } }
+            </style>
+        </head>
+        <body>
+            <div class="modern-receipt">
+                <div class="receipt-header">
+                    <div class="receipt-shop-name">${shopName}</div>
+                    <div class="receipt-address">${shopAddress}</div>
+                </div>
+                
+                <div class="receipt-info">
+                    <div class="receipt-date">${dateString} ${timeString}</div>
+                    <div class="receipt-transaction">Receipt #: ${saleData.id || '000001'}</div>
+                </div>
+                
+                <div class="receipt-divider"></div>
+                
+                <div class="receipt-items">
+                    <div class="receipt-section-title">ITEMS</div>
+                    ${itemsHTML}
+                </div>
+                
+                <div class="receipt-divider"></div>
+                
+                <div class="receipt-totals">
+                    <div class="receipt-total-row">
+                        <span>Subtotal:</span>
+                        <span>₱${saleData.subtotal.toFixed(2)}</span>
+                    </div>
+                    ${saleData.discount > 0 ? `
+                    <div class="receipt-total-row receipt-discount">
+                        <span>Discount (${saleData.discountType.toUpperCase()}):</span>
+                        <span>-₱${saleData.discount.toFixed(2)}</span>
+                    </div>
+                    ` : ''}
+                    <div class="receipt-total-row receipt-grand-total">
+                        <span>TOTAL:</span>
+                        <span>₱${saleData.total.toFixed(2)}</span>
+                    </div>
+                </div>
+                
+                <div class="receipt-payment">
+                    <div class="receipt-section-title">PAYMENT</div>
+                    <div class="receipt-payment-method">
+                        <span>Method:</span>
+                        <span class="payment-method-badge ${saleData.paymentMethod}">${saleData.paymentMethod.toUpperCase()}</span>
+                    </div>
+                    ${paymentHTML}
+                </div>
+                
+                <div class="receipt-divider"></div>
+                
+                <div class="receipt-footer">
+                    <div class="receipt-thankyou">${shopFooter}</div>
+                    <b><div class="receipt-greeting">Thank you for your purchase!</div></b>
+                </div>
+                
+                <div class="receipt-divider"></div>
+
+                <div class="receipt-queue">
+                    <div class="queue-number-large">Queue #${lastQueueNumber.toString().padStart(3, '0')}</div>
+                    <div class="queue-notice">Please wait for your number to be called</div>
+                </div>
+                ${notesHTML}
+            </div>
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() {
+                        window.close();
+                    }, 100);
+                };
+            </script>
+        </body>
+        </html>
+    `;
+    
+    printWindow.document.write(receiptHTML);
+    printWindow.document.close();
 }
 // Initialize when page loads
     document.addEventListener('DOMContentLoaded', initPOS);
