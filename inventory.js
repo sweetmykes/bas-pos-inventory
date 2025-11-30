@@ -55,7 +55,7 @@ function closeCategoryModal() {
 
 function loadCategoryIcons() {
     const iconsGrid = document.getElementById('categoryIcons');
-    const icons = ['☕', '🍰', '🥤', '🍩', '🍪', '🍫', '🍦', '🧁', '🎂', '🍚', '🧃', '🍵'];
+    const icons = ['☕', '🍰', '🥤', '🍩', '🍪', '🍟', '🍔', '🧁', '🎂', '🍚', '🧋', '🌭'];
     
     iconsGrid.innerHTML = '';
     icons.forEach(icon => {

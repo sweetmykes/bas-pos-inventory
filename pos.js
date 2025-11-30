@@ -673,8 +673,9 @@ function printReceipt() {
 }
 
 // UPDATED PRINT FUNCTION - GUARANTEED TO WORK
+// UPDATED PRINT FUNCTION FOR 58MM PAPER
 function printReceiptStandard() {
-    console.log('=== PRINT RECEIPT CALLED ===');
+    console.log('=== PRINT RECEIPT CALLED (58mm) ===');
     
     const receiptElement = document.querySelector('.modern-receipt');
     
@@ -694,7 +695,7 @@ function printReceiptStandard() {
     
     document.body.appendChild(printFrame);
     
-    // Simple receipt HTML
+    // 58mm receipt HTML
     const receiptHTML = `
         <!DOCTYPE html>
         <html>
@@ -704,25 +705,31 @@ function printReceiptStandard() {
             <style>
                 body {
                     font-family: 'Courier New', monospace;
-                    font-size: 12px;
-                    line-height: 1.2;
-                    width: 80mm;
+                    font-size: 10px;
+                    line-height: 1.1;
+                    width: 58mm;
                     margin: 0 auto;
-                    padding: 10px;
+                    padding: 5px;
                     color: #000;
                     background: white;
                 }
                 .modern-receipt {
-                    width: 100%;
+                    width: 58mm !important;
+                    max-width: 58mm !important;
                 }
                 @media print {
                     body {
                         margin: 0;
-                        padding: 10px;
-                        width: 80mm;
+                        padding: 5px;
+                        width: 58mm !important;
                     }
                     .modern-receipt {
-                        width: 80mm;
+                        width: 58mm !important;
+                        max-width: 58mm !important;
+                    }
+                    @page {
+                        margin: 0;
+                        size: 58mm auto;
                     }
                 }
             </style>

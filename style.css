@@ -2158,6 +2158,261 @@ select.form-input {
     text-align: center;
     margin-top: 12px;
 }
+/* 58mm Thermal Printer Receipt Styles */
+.modern-receipt {
+    width: 58mm !important;
+    max-width: 58mm !important;
+    min-width: 58mm !important;
+    background: white;
+    padding: 8px !important;
+    font-family: 'Courier New', monospace;
+    font-size: 10px !important;
+    line-height: 1.1 !important;
+    color: #000;
+    margin: 0 auto;
+}
+
+.receipt-header {
+    text-align: center;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px dashed #000;
+}
+
+.receipt-shop-name {
+    font-size: 12px !important;
+    font-weight: bold;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+}
+
+.receipt-address {
+    font-size: 8px !important;
+    color: #666;
+    line-height: 1;
+}
+
+.receipt-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 8px !important;
+    color: #666;
+}
+
+.receipt-date, .receipt-transaction {
+    font-weight: bold;
+}
+
+.receipt-divider {
+    border-bottom: 1px dashed #000;
+    margin: 4px 0;
+    height: 1px;
+}
+
+.receipt-section-title {
+    font-weight: bold;
+    font-size: 9px !important;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+/* Items Styling - More Compact */
+.receipt-items {
+    margin-bottom: 6px;
+}
+
+.receipt-item {
+    margin-bottom: 4px;
+}
+
+.receipt-item-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1px;
+}
+
+.receipt-item-name {
+    flex: 1;
+    font-weight: bold;
+    padding-right: 5px;
+    font-size: 9px !important;
+    line-height: 1.1;
+}
+
+.receipt-item-qty {
+    font-weight: bold;
+    white-space: nowrap;
+    font-size: 9px !important;
+}
+
+.receipt-item-sub {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8px !important;
+    color: #666;
+}
+
+.receipt-item-price {
+    flex: 1;
+}
+
+.receipt-item-total {
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+/* Totals Styling - More Compact */
+.receipt-totals {
+    margin-bottom: 6px;
+}
+
+.receipt-total-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2px;
+    font-size: 9px !important;
+}
+
+.receipt-discount {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.receipt-grand-total {
+    font-size: 11px !important;
+    font-weight: bold;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid #000;
+}
+
+/* Payment Styling - More Compact */
+.receipt-payment {
+    margin-bottom: 6px;
+}
+
+.receipt-payment-method {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    font-size: 9px !important;
+}
+
+.payment-method-badge {
+    padding: 1px 4px;
+    border-radius: 8px;
+    font-size: 7px !important;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.receipt-payment-methods {
+    font-size: 8px !important;
+}
+
+.receipt-payment-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1px;
+}
+
+/* Footer Styling - More Compact */
+.receipt-footer {
+    text-align: center;
+    margin-top: 8px;
+}
+
+.receipt-thankyou {
+    font-weight: bold;
+    margin-bottom: 2px;
+    font-size: 9px !important;
+}
+
+.receipt-greeting {
+    margin-bottom: 2px;
+    font-size: 8px !important;
+}
+
+/* Queue Section - More Compact */
+.receipt-queue {
+    text-align: center;
+    margin: 10px 0;
+    padding: 8px;
+    background: #f8fafc;
+    border-radius: 4px;
+    border: 1px dashed #3b82f6;
+}
+
+.queue-number-large {
+    font-size: 14px !important;
+    font-weight: bold;
+    color: var(--primary);
+    margin-bottom: 4px;
+}
+
+.queue-notice {
+    font-size: 8px !important;
+    color: var(--secondary);
+    font-style: italic;
+}
+
+/* Notes Section - More Compact */
+.receipt-notes {
+    font-size: 8px !important;
+    margin-top: 6px;
+    padding: 4px;
+    border-top: 1px dashed #ccc;
+    color: #ef4444;
+    word-wrap: break-word;
+}
+
+/* Print Styles for 58mm */
+@media print {
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 58mm !important;
+    }
+    
+    .modern-receipt {
+        width: 58mm !important;
+        max-width: 58mm !important;
+        min-width: 58mm !important;
+        margin: 0 !important;
+        padding: 5px !important;
+        box-shadow: none !important;
+        font-size: 10px !important;
+        line-height: 1.1 !important;
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+    
+    /* Ensure everything fits within 58mm */
+    * {
+        max-width: 58mm !important;
+    }
+}
+
+/* Fix for receipt modal display */
+#receiptModal .modal-content {
+    max-width: 58mm;
+    padding: 10px;
+}
+
+#receiptContent {
+    max-height: 70vh;
+    overflow-y: auto;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+}
 
 
 /* Responsive */
