@@ -1,4 +1,4 @@
-// pos.js - POS page functionality
+// pos.js - FINAL VERSION WITH AGGRESSIVE PRINT TEST
 
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 let currentCategory = 'all';
@@ -675,10 +675,9 @@ function calculateTotal() {
     return subtotal - discountAmount;
 }
 
-// NEW FUNCTION: Tries to print using Web Bluetooth
-// Removed the actual Bluetooth logic to avoid searching issues. Now forces standard print.
+// OVERWRITE THE ORIGINAL printReceipt function in pos.js
 function printReceipt() {
-    // FIX: Force standard print dialog immediately
+    // Falls back to standard print to avoid Bluetooth searching issues
     printReceiptStandard();
 }
 
@@ -690,52 +689,20 @@ function printReceiptStandard() {
         return;
     }
     
-    // Get the HTML content of the receipt
-    const receiptContent = receiptElement.outerHTML;
+    // TEMPORARY FIX: Inject receipt into the main body and immediately print
+    // Ito ang ginagawa ng iba pang POS, sinisira ang main page view para lang makapag-print
     
-    // Open a new window specifically for printing
-    const printWindow = window.open('', '_blank');
+    const originalBody = document.body.innerHTML;
+    const printContent = `<div style="width: 80mm; margin: 0 auto; padding: 0;">${receiptElement.outerHTML}</div>`;
+
+    document.body.innerHTML = printContent;
+    window.print();
     
-    if (!printWindow) {
-        showErrorAlert('Print Error', 'The browser blocked the print window pop-up. Check your settings.');
-        return;
-    }
-    
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-            <head>
-                <title>Print Receipt</title>
-                <style>
-                    /* Minimal styles copied for thermal print size and font */
-                    body { 
-                        font-family: 'Courier New', monospace; 
-                        margin: 0; 
-                        padding: 0;
-                        font-size: 12px;
-                        line-height: 1.3;
-                        background: white;
-                    }
-                    @media print {
-                        body { margin: 0; padding: 0; }
-                        .modern-receipt { 
-                            width: 80mm !important; 
-                            margin: 0 !important;
-                            padding: 10px !important;
-                            box-shadow: none !important;
-                            font-size: 11px !important;
-                        }
-                    }
-                    /* Ensure no headers/footers print */
-                    @page { margin: 0; } 
-                </style>
-            </head>
-            <body onload="window.print(); setTimeout(() => window.close(), 500);">
-                ${receiptContent}
-            </body>
-        </html>
-    `);
-    printWindow.document.close();
+    // Ibalik ang orihinal na content pagkatapos mag-print
+    setTimeout(() => {
+        // Tiyakin na ang POS state ay na-re-load para makita ang original view.
+        window.location.reload(); 
+    }, 500); 
 }
 
 

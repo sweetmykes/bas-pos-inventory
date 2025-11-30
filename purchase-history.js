@@ -195,7 +195,7 @@ async function bluetoothPrint(rawReceipt) {
         // Use generic filters to detect any printer
         const device = await navigator.bluetooth.requestDevice({
             acceptAllDevices: true,
-            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', '49535343-fe7d-4ae5-8fa9-9fafd205e455'] 
+            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', '49535343-fe7d-4ae5-8ae7-9fafd205e455'] 
         });
 
         const server = await device.gatt.connect();
@@ -451,15 +451,18 @@ function generateReceiptHTML(sale) {
                 
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
                     ${sale.items.map(item => {
-                        const pName = products.find(p => p.id == item.productId)?.name || "Item";
-                        const pDetails = item.size ? `(${item.size})` : "";
-                        return `<tr><td style="padding: 2px 0; vertical-align: top;">${item.quantity}x</td><td style="padding: 2px 5px; vertical-align: top;">${pName} <span style="font-size:10px; color:#666">${pDetails}</span></td><td style="padding: 2px 0; text-align: right; vertical-align: top;">₱${(item.price * item.quantity).toFixed(2)}</td></tr>`;
+                        const pName = products.find(p => p.id === item.productId);
+                        if (pName) {
+                            const displayName = item.size ? `${pName.name} (${item.size})` : pName.name;
+                            return `<tr><td style="padding: 2px 0; vertical-align: top;">${item.quantity}x</td><td style="padding: 2px 5px; vertical-align: top;">${displayName}</td><td style="padding: 2px 0; text-align: right; vertical-align: top;">₱${(item.price * item.quantity).toFixed(2)}</td></tr>`;
+                        }
+                        return '';
                     }).join('')}
                 </table>
                 
                 <div style="border-top: 1px dashed #ccc; padding-top: 5px; margin-top: 5px;">
                     <div style="display: flex; justify-content: space-between; font-size: 11px;"><span>Subtotal:</span> <span>₱${(sale.subtotal || sale.total).toFixed(2)}</span></div>
-                    ${sale.discount > 0 ? `<div style="display: flex; justify-content: space-between; font-size: 11px; color: red;"><span>Discount (${sale.discountType || 'Promo'}):</span> <span>-₱${sale.discount.toFixed(2)}</span></div>` : ''}
+                    ${sale.discount > 0 ? `<div style="display: flex; justify-content: space-between; font-size: 11px; color: red;"><span>Discount (${sale.discountType.toUpperCase()}):</span> <span>-₱${sale.discount.toFixed(2)}</span></div>` : ''}
                     <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin: 5px 0;"><span>TOTAL</span><span>₱${sale.total.toFixed(2)}</span></div>
                     ${paymentHTML}
                     <div style="display: flex; justify-content: space-between; font-size: 11px; margin-top: 2px; font-weight: bold;"><span>Change:</span><span>₱${realChange.toFixed(2)}</span></div>

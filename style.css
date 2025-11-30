@@ -1,5 +1,4 @@
 :root {
-/* ... (Existing :root variables) ... */
     --primary: #2563eb;
     --primary-dark: #1d4ed8;
     --secondary: #64748b;
@@ -860,126 +859,6 @@ select.form-input {
     display: flex;
     gap: 8px;
 }
-/* Add this to your existing style.css file */
-
-/* Inventory Table Styles */
-.inventory-table {
-    background: white;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow-x: auto;
-    margin-top: 20px;
-}
-
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.table th {
-    background: #f8fafc;
-    padding: 12px 15px;
-    text-align: left;
-    font-weight: 600;
-    color: #374151;
-    border-bottom: 1px solid #e5e7eb;
-    white-space: nowrap;
-}
-
-.table td {
-    padding: 12px 15px;
-    border-bottom: 1px solid #e5e7eb;
-    white-space: normal;
-}
-
-.table tr:hover {
-    background: #f9fafb;
-}
-
-/* Size Stock Row Styles */
-.size-stock-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 4px 0;
-    border-bottom: 1px dashed #eee;
-    white-space: nowrap;
-}
-
-.size-stock-row:last-child {
-    border-bottom: none;
-}
-
-/* Edit Stock Button */
-.edit-stock-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 12px;
-    color: var(--primary);
-    padding: 2px 6px;
-    margin-left: 5px;
-    border-radius: 4px;
-    transition: all 0.2s;
-    opacity: 0.6;
-}
-
-.edit-stock-btn:hover {
-    background-color: #eff6ff;
-    opacity: 1;
-    transform: scale(1.2);
-}
-
-/* For drinks category - make total stock non-editable */
-.total-stock-readonly {
-    font-weight: bold;
-    font-size: 1.1em;
-    color: var(--dark);
-    display: block;
-}
-
-/* Category with icon in table */
-.category-with-icon {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.category-with-icon .category-icon {
-    font-size: 1.2em;
-    margin: 0;
-}
-
-.text-center {
-    text-align: center;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .inventory-table {
-        overflow-x: auto;
-        display: block;
-        width: 100%;
-    }
-    
-    .table th, .table td {
-        padding: 10px 12px;
-        white-space: normal;
-    }
-    
-    .size-stock-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-    }
-    
-    .edit-stock-btn {
-        align-self: flex-end;
-    }
-}
 
 /* Category Cards with Colors */
 .categories-grid {
@@ -1152,7 +1031,7 @@ select.form-input {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    border: 2px solid #e5e7eb;
+    border: 2px solid var(--border);
 }
 
 .color-preview.blue { background: #3b82f6; }
@@ -1348,50 +1227,35 @@ select.form-input {
     text-align: left;
     border-bottom: 1px solid var(--border);
     vertical-align: top;
-    /* FIXED: Ensure proper table cell display */
-    display: table-cell;
+    /* FINAL FIX: Allow wrapping for better alignment in Items/Time (Default is now normal) */
     white-space: normal; 
 }
-
-/* FIXED: Specific Column Widths and White Space Control */
-.history-items-table th:nth-child(1), 
-.history-items-table td:nth-child(1) { /* Time */
+/* FIX: Specific Column Widths and White Space Control */
+.history-items-table th:nth-child(1), .history-items-table td:nth-child(1) { /* Time */
     min-width: 100px;
-    white-space: nowrap;
+    white-space: nowrap; /* Prevent time from wrapping */
 }
-
-.history-items-table th:nth-child(2), 
-.history-items-table td:nth-child(2) { /* Items */
+.history-items-table th:nth-child(2), .history-items-table td:nth-child(2) { /* Items */
     min-width: 280px;
 }
-
-.history-items-table th:nth-child(3), 
-.history-items-table td:nth-child(3) { /* Total */
+.history-items-table th:nth-child(3), .history-items-table td:nth-child(3) { /* Total */
     min-width: 100px;
     white-space: nowrap;
 }
-
-.history-items-table th:nth-child(4), 
-.history-items-table td:nth-child(4) { /* Payment */
+.history-items-table th:nth-child(4), .history-items-table td:nth-child(4) { /* Payment */
     min-width: 120px;
-    white-space: nowrap;
+    white-space: nowrap; 
 }
-
-/* FIXED: Proper table cell styling for Actions column */
-.history-items-table th:nth-child(5), 
+/* FINAL FIX: Apply flex to 5th TD for Actions column */
+.history-items-table th:nth-child(5),
 .history-items-table td:nth-child(5) { /* Actions Column */
-    min-width: 180px;
-    white-space: nowrap;
-    text-align: center;
-    display: table-cell; /* Ensure it stays as table cell */
-}
-
-/* Container for buttons in Actions column */
-.action-buttons-container {
-    display: flex;
+    min-width: 180px; 
+    white-space: nowrap; 
+    display: flex; 
     gap: 5px;
-    justify-content: center;
     align-items: center;
+    height: 100%;
+    padding: 8px 5px; 
 }
 
 .history-items-table th {
@@ -1901,7 +1765,7 @@ select.form-input {
 
 .dropdown-btn:hover {
     border-color: var(--primary, #3b82f6); /* Fallback color if var not defined */
-    background-color: #f8f9fa;
+    background-color: #f8fafc;
 }
 
 /* Arrow icon (caret) */
@@ -2383,13 +2247,16 @@ select.form-input {
         min-width: 120px;
         white-space: nowrap; 
     }
-    /* FIXED: Proper table cell styling for Actions column */
-    .history-items-table th:nth-child(5), 
+    /* FINAL FIX: Apply flex to 5th TD for Actions column */
+    .history-items-table th:nth-child(5),
     .history-items-table td:nth-child(5) { /* Actions Column */
-        min-width: 180px;
-        white-space: nowrap;
-        text-align: center;
-        display: table-cell; /* Ensure it stays as table cell */
+        min-width: 180px; 
+        white-space: nowrap; 
+        display: flex; 
+        gap: 5px;
+        align-items: center;
+        height: 100%;
+        padding: 8px 5px; 
     }
 
     .history-items-table .btn-sm {
@@ -2467,7 +2334,7 @@ select.form-input {
         justify-content: center;
     }
 
-    #customConfirmModal .btn, #customConfirmModal .btn-outline {
+    #customConfirmModal .btn, .history-items-table .btn-outline {
         min-width: 120px; /* Pantayin ang lapad */
         height: 44px;
         justify-content: center;
@@ -2507,9 +2374,4 @@ select.form-input {
 [class*="category-"] {
     font-size: 14px !important;
     font-weight: 600 !important;
-}
-
-/* FIX: Taasan ang z-index ng Order Details Modal para lumabas sa ibabaw ng Queue Modal */
-#orderDetailsModal {
-    z-index: 35000 !important; 
 }
