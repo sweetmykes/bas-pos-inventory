@@ -1744,7 +1744,6 @@ select.form-input {
 
 /* Print Styles for 58mm - TRUE FULL WIDTH & REMOVE UI ELEMENTS */
 @media print {
-    /* REMOVE MODAL HEADER, BUTTONS, AND OTHER UI ELEMENTS */
     .modal-header,
     .close-btn,
     .form-actions,
@@ -1764,12 +1763,14 @@ select.form-input {
         max-width: 58mm !important;
         min-width: 58mm !important;
         margin: 0 !important;
-        padding: 1px !important; /* MINIMAL PADDING */
+        padding: 5px !important;    
         box-shadow: none !important;
         border: none !important;
         background: white !important;
     }
-    
+    .no-print {
+        display: none !important;
+    }
     /* Ensure full width utilization */
     .receipt-shop-name,
     .receipt-address,
@@ -1793,23 +1794,38 @@ select.form-input {
 }
 
 /* Fix for receipt modal display - MINIMAL PADDING */
+#receiptModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 25000;
+    align-items: center;
+    justify-content: center;
+}
 #receiptModal .modal-content {
     max-width: 58mm;
-    padding: 2px; /* MINIMAL PADDING */
+    padding: 10px;
     border: none !important;
     box-shadow: none !important;
+    margin: 0 auto; 
+    display: flex;
+    flex-direction: column;
 }
 
 #receiptContent {
     max-height: 70vh;
     overflow-y: auto;
     background: white !important;
-    padding: 5px; /* REDUCED PADDING */
+    padding: 15px;
     border-radius: 0 !important;
     display: flex;
     justify-content: center;
     border: none !important;
-    width: 58mm !important;
+    width: 100%;
 }
 
 /* Dropdown Container */
