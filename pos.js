@@ -8,7 +8,6 @@ let paymentAmounts = { cash: 0, gcash: 0 };
 let selectedProductForSize = null;
 let sizeSelectionModal = null;
 window.lastProcessedSaleData = null; // Store sale data for print
-updatePOSBranding();
 
 // ESC/POS Commands (Simplified) - Only used for RAW printing simulation
 const ESC = '\x1B';
@@ -372,7 +371,7 @@ function loadCart() {
                 <button class="quantity-btn" onclick="updateQuantity(${index}, -1)">-</button>
                 <span>${item.quantity}</span>
                 <button class="quantity-btn" onclick="updateQuantity(${index}, 1)">+</button>
-                <button class="remove-btn" onclick="removeFromCart(${index})" style="line-height: 1;">🗑️</button>
+                <button class="remove-btn" onclick="removeFromCart(${index})">🗑️</button>
             </div>
         `;
         cartItems.appendChild(cartItem);
@@ -675,76 +674,173 @@ function calculateTotal() {
     return subtotal - discountAmount;
 }
 
-// OVERWRITE THE ORIGINAL printReceipt function in pos.js
+// NEW FUNCTION: Tries to print using Web Bluetooth
+// Removed the actual Bluetooth logic to avoid searching issues. Now forces standard print.
 function printReceipt() {
     // Falls back to standard print to avoid Bluetooth searching issues
     printReceiptStandard();
 }
 
 // NEW FUNCTION: Standard Print Fallback (Final Version)
+// NEW FUNCTION: Standard Print Fallback (FIXED VERSION)
 function printReceiptStandard() {
     const receiptElement = document.querySelector('.modern-receipt');
-    const modal = document.getElementById('receiptModal');
-
-    if (!receiptElement || !modal) {
+    if (!receiptElement) {
         showErrorAlert('Print Error', 'Receipt content not found for printing.');
         return;
     }
     
-    // 1. Kumuha ng HTML content
-    const receiptContent = receiptElement.outerHTML;
-    
-    // 2. Itago ang modal para hindi ito kasama sa print
-    modal.style.display = 'none';
-
-    // 3. Mag-open ng ISOLATED window
-    const printWindow = window.open('', '_blank');
+    // CREATE A NEW WINDOW FOR PRINTING ONLY THE RECEIPT
+    const printWindow = window.open('', '_blank', 'width=350,height=600,scrollbars=no,menubar=no,toolbar=no');
     
     if (!printWindow) {
-        showErrorAlert('Print Error', 'The browser blocked the print window pop-up. Check your settings.');
-        modal.style.display = 'flex'; // Ibalik ang modal kung na-block
+        showErrorAlert('Print Error', 'Please allow popups for printing.');
         return;
     }
     
-    // 4. Inject ang resibo sa bagong window
-    printWindow.document.write(`
+    // BUILD THE RECEIPT HTML
+    const receiptHTML = `
         <!DOCTYPE html>
         <html>
-            <head>
-                <title>Receipt</title>
-                <style>
-                    /* Minimal styles for thermal print size and font */
-                    body { 
-                        font-family: 'Courier New', monospace; 
-                        margin: 0; 
-                        padding: 0;
-                        font-size: 12px;
-                        line-height: 1.3;
-                        background: white;
-                    }
-                    @media print {
-                        body { margin: 0; padding: 0; }
-                        .modern-receipt { 
-                            width: 80mm !important; 
-                            margin: 0 !important;
-                            padding: 10px !important;
-                            box-shadow: none !important;
-                            font-size: 11px !important;
-                        }
-                    }
-                    /* Ensure no headers/footers print */
-                    @page { margin: 0; } 
-                </style>
-            </head>
-            <body onload="window.print(); setTimeout(() => window.close(), 500);">
-                ${receiptContent}
-            </body>
+        <head>
+            <title>Receipt</title>
+            <style>
+                body { 
+                    font-family: 'Courier New', monospace;
+                    width: 80mm;
+                    margin: 0 auto;
+                    padding: 10px;
+                    font-size: 12px;
+                    line-height: 1.2;
+                    color: #000;
+                    background: white;
+                }
+                .modern-receipt {
+                    width: 100%;
+                    max-width: 80mm;
+                }
+                .receipt-header {
+                    text-align: center;
+                    margin-bottom: 10px;
+                }
+                .receipt-shop-name {
+                    font-weight: bold;
+                    font-size: 14px;
+                }
+                .receipt-address {
+                    font-size: 10px;
+                    margin-bottom: 5px;
+                }
+                .receipt-info {
+                    text-align: center;
+                    font-size: 10px;
+                    margin-bottom: 8px;
+                }
+                .receipt-divider {
+                    border-top: 1px dashed #000;
+                    margin: 8px 0;
+                }
+                .receipt-section-title {
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                }
+                .receipt-item {
+                    margin-bottom: 5px;
+                }
+                .receipt-item-main {
+                    display: flex;
+                    justify-content: space-between;
+                }
+                .receipt-item-sub {
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 10px;
+                    color: #666;
+                }
+                .receipt-totals {
+                    margin: 10px 0;
+                }
+                .receipt-total-row {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 3px;
+                }
+                .receipt-grand-total {
+                    font-weight: bold;
+                    font-size: 14px;
+                    border-top: 1px solid #000;
+                    padding-top: 5px;
+                    margin-top: 5px;
+                }
+                .receipt-payment-method {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 5px;
+                }
+                .payment-method-badge {
+                    padding: 2px 6px;
+                    border-radius: 3px;
+                    font-weight: bold;
+                }
+                .payment-method-badge.cash { background: #d4edda; color: #155724; }
+                .payment-method-badge.gcash { background: #e7f3ff; color: #004085; }
+                .payment-method-badge.multi { background: #fff3cd; color: #856404; }
+                .receipt-payment-row {
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 11px;
+                    margin-bottom: 2px;
+                }
+                .receipt-footer {
+                    text-align: center;
+                    margin: 10px 0;
+                }
+                .receipt-thankyou {
+                    font-size: 10px;
+                    margin-bottom: 5px;
+                }
+                .receipt-greeting {
+                    font-weight: bold;
+                }
+                .receipt-queue {
+                    text-align: center;
+                    margin: 15px 0;
+                    padding: 10px;
+                    border: 2px dashed #000;
+                }
+                .queue-number-large {
+                    font-size: 24px;
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                }
+                .queue-notice {
+                    font-size: 11px;
+                }
+                @media print {
+                    body { margin: 0; padding: 10px; }
+                    .modern-receipt { width: 80mm; }
+                }
+            </style>
+        </head>
+        <body>
+            ${receiptElement.outerHTML}
+        </body>
         </html>
-    `);
+    `;
+    
+    // WRITE AND PRINT THE RECEIPT
+    printWindow.document.write(receiptHTML);
     printWindow.document.close();
     
-    // 5. I-display ulit ang modal (Kailangan para makita ng user ang resibo)
-    modal.style.display = 'flex';
+    // WAIT FOR CONTENT TO LOAD THEN PRINT
+    printWindow.onload = function() {
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.onafterprint = function() {
+                printWindow.close();
+            };
+        }, 500);
+    };
 }
 
 
