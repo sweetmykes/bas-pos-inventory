@@ -8,6 +8,7 @@ let paymentAmounts = { cash: 0, gcash: 0 };
 let selectedProductForSize = null;
 let sizeSelectionModal = null;
 window.lastProcessedSaleData = null; // Store sale data for print
+updatePOSBranding();
 
 // ESC/POS Commands (Simplified) - Only used for RAW printing simulation
 const ESC = '\x1B';
@@ -371,7 +372,7 @@ function loadCart() {
                 <button class="quantity-btn" onclick="updateQuantity(${index}, -1)">-</button>
                 <span>${item.quantity}</span>
                 <button class="quantity-btn" onclick="updateQuantity(${index}, 1)">+</button>
-                <button class="remove-btn" onclick="removeFromCart(${index})">🗑️</button>
+                <button class="remove-btn" onclick="removeFromCart(${index})" style="line-height: 1;">🗑️</button>
             </div>
         `;
         cartItems.appendChild(cartItem);
@@ -674,8 +675,7 @@ function calculateTotal() {
     return subtotal - discountAmount;
 }
 
-// NEW FUNCTION: Tries to print using Web Bluetooth
-// Removed the actual Bluetooth logic to avoid searching issues. Now forces standard print.
+// OVERWRITE THE ORIGINAL printReceipt function in pos.js
 function printReceipt() {
     // Falls back to standard print to avoid Bluetooth searching issues
     printReceiptStandard();
@@ -684,25 +684,67 @@ function printReceipt() {
 // NEW FUNCTION: Standard Print Fallback (Final Version)
 function printReceiptStandard() {
     const receiptElement = document.querySelector('.modern-receipt');
-    if (!receiptElement) {
+    const modal = document.getElementById('receiptModal');
+
+    if (!receiptElement || !modal) {
         showErrorAlert('Print Error', 'Receipt content not found for printing.');
         return;
     }
     
-    // TEMPORARY FIX: Inject receipt into the main body and immediately print
-    // Ito ang ginagawa ng iba pang POS, sinisira ang main page view para lang makapag-print
+    // 1. Kumuha ng HTML content
+    const receiptContent = receiptElement.outerHTML;
     
-    const originalBody = document.body.innerHTML;
-    const printContent = `<div style="width: 80mm; margin: 0 auto; padding: 0;">${receiptElement.outerHTML}</div>`;
+    // 2. Itago ang modal para hindi ito kasama sa print
+    modal.style.display = 'none';
 
-    document.body.innerHTML = printContent;
-    window.print();
+    // 3. Mag-open ng ISOLATED window
+    const printWindow = window.open('', '_blank');
     
-    // Ibalik ang orihinal na content pagkatapos mag-print
-    setTimeout(() => {
-        // Tiyakin na ang POS state ay na-re-load para makita ang original view.
-        window.location.reload(); 
-    }, 500); 
+    if (!printWindow) {
+        showErrorAlert('Print Error', 'The browser blocked the print window pop-up. Check your settings.');
+        modal.style.display = 'flex'; // Ibalik ang modal kung na-block
+        return;
+    }
+    
+    // 4. Inject ang resibo sa bagong window
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <title>Receipt</title>
+                <style>
+                    /* Minimal styles for thermal print size and font */
+                    body { 
+                        font-family: 'Courier New', monospace; 
+                        margin: 0; 
+                        padding: 0;
+                        font-size: 12px;
+                        line-height: 1.3;
+                        background: white;
+                    }
+                    @media print {
+                        body { margin: 0; padding: 0; }
+                        .modern-receipt { 
+                            width: 80mm !important; 
+                            margin: 0 !important;
+                            padding: 10px !important;
+                            box-shadow: none !important;
+                            font-size: 11px !important;
+                        }
+                    }
+                    /* Ensure no headers/footers print */
+                    @page { margin: 0; } 
+                </style>
+            </head>
+            <body onload="window.print(); setTimeout(() => window.close(), 500);">
+                ${receiptContent}
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+    
+    // 5. I-display ulit ang modal (Kailangan para makita ng user ang resibo)
+    modal.style.display = 'flex';
 }
 
 
