@@ -1,4 +1,4 @@
-// pos.js - FINAL VERSION WITH AGGRESSIVE PRINT TEST
+// pos.js - FINAL STABLE PRINT VERSION
 
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 let currentCategory = 'all';
@@ -8,7 +8,6 @@ let paymentAmounts = { cash: 0, gcash: 0 };
 let selectedProductForSize = null;
 let sizeSelectionModal = null;
 window.lastProcessedSaleData = null; // Store sale data for print
-updatePOSBranding();
 
 // ESC/POS Commands (Simplified) - Only used for RAW printing simulation
 const ESC = '\x1B';
@@ -675,7 +674,8 @@ function calculateTotal() {
     return subtotal - discountAmount;
 }
 
-// OVERWRITE THE ORIGINAL printReceipt function in pos.js
+// NEW FUNCTION: Tries to print using Web Bluetooth
+// Removed the actual Bluetooth logic to avoid searching issues. Now forces standard print.
 function printReceipt() {
     // Falls back to standard print to avoid Bluetooth searching issues
     printReceiptStandard();
