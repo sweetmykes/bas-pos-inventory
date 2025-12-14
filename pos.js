@@ -11,6 +11,8 @@ window.lastProcessedSaleData = null; // Store sale data for print
 
 // Initialize POS
 function initPOS() {
+    // FIX 1: Tiyakin na tinatawag ang branding sa simula
+    updatePOSBranding(); 
     loadCategories();
     loadProducts();
     loadCart();
@@ -677,14 +679,17 @@ function printReceipt() {
 function printReceiptStandard() {
     console.log('=== PRINT RECEIPT CALLED (58mm) ===');
     
-    const receiptElement = document.querySelector('.modern-receipt');
-    
-    if (!receiptElement) {
-        showErrorAlert('Print Error', 'No receipt found. Please generate receipt first.');
+    // Use window.lastProcessedSaleData if available
+    const saleData = window.lastProcessedSaleData;
+    if (!saleData) {
+        showErrorAlert('Print Error', 'Sale data not found. Please try confirming payment again.');
         return;
     }
     
-    // Create iframe for printing
+    // Generate fresh HTML content using the stored sale data
+    const receiptHTML = generateReceiptHTMLForPrint(saleData); 
+
+    // Create iframe for printing (Standard Print Dialog)
     const printFrame = document.createElement('iframe');
     printFrame.style.position = 'fixed';
     printFrame.style.right = '0';
@@ -695,14 +700,15 @@ function printReceiptStandard() {
     
     document.body.appendChild(printFrame);
     
-    // 58mm receipt HTML
-    const receiptHTML = `
+    // 58mm receipt HTML structure
+    const finalPrintHTML = `
         <!DOCTYPE html>
         <html>
         <head>
             <title>Receipt</title>
             <meta charset="UTF-8">
             <style>
+                /* Minimal print styles for thermal */
                 body {
                     font-family: 'Courier New', monospace;
                     font-size: 10px;
@@ -713,20 +719,7 @@ function printReceiptStandard() {
                     color: #000;
                     background: white;
                 }
-                .modern-receipt {
-                    width: 58mm !important;
-                    max-width: 58mm !important;
-                }
                 @media print {
-                    body {
-                        margin: 0;
-                        padding: 5px;
-                        width: 58mm !important;
-                    }
-                    .modern-receipt {
-                        width: 58mm !important;
-                        max-width: 58mm !important;
-                    }
                     @page {
                         margin: 0;
                         size: 58mm auto;
@@ -735,14 +728,14 @@ function printReceiptStandard() {
             </style>
         </head>
         <body>
-            ${receiptElement.outerHTML}
+            ${receiptHTML}
         </body>
         </html>
     `;
     
     // Write content to iframe
     printFrame.contentDocument.open();
-    printFrame.contentDocument.write(receiptHTML);
+    printFrame.contentDocument.write(finalPrintHTML);
     printFrame.contentDocument.close();
     
     // Print after content loaded
@@ -768,6 +761,96 @@ function printReceiptStandard() {
             }
         }, 500);
     };
+}
+// NEW HELPER FUNCTION: Generates clean HTML for 58mm printing
+function generateReceiptHTMLForPrint(sale) {
+    const shopName = shopInfo.name || '';
+    const shopAddress = shopInfo.address || '';
+    
+    // FIX 3: Lakihan ang font size (use largest class)
+    let shopNameClass = shopName.length > 25 ? 'extremely-long' : (shopName.length > 20 ? 'very-long' : (shopName.length > 15 ? 'medium-long' : '')); 
+
+    const receiptId = (sale.id || '000001').toString().slice(-6);
+    const saleDate = new Date(sale.timestamp);
+    const dateString = saleDate.toLocaleDateString('en-PH', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const timeString = saleDate.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+
+    let itemsHTML = sale.items.map(item => {
+        const product = products.find(p => p.id === item.productId);
+        if(!product) return '';
+        const displayName = item.size ? `${product.name} (${item.size})` : product.name;
+        return `
+            <div class="receipt-item">
+                <div class="receipt-item-main">
+                    <span class="receipt-item-name">${displayName}</span>
+                    <span class="receipt-item-qty">${item.quantity}x</span>
+                </div>
+                <div class="receipt-item-sub">
+                    <span class="receipt-item-price">@₱${item.price.toFixed(2)}</span>
+                    <span class="receipt-item-total">₱${(item.price * item.quantity).toFixed(2)}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    let paymentHTML = getPaymentHTML(sale);
+    
+    return `
+        <div class="modern-receipt">
+            <div class="receipt-header">
+                <div class="receipt-shop-name ${shopNameClass}">${shopName}</div>
+                ${shopAddress ? `<div class="receipt-address">${shopAddress}</div>` : ''}
+            </div>
+            
+            <div class="receipt-info">
+                <div class="receipt-date">${dateString} ${timeString}</div>
+                <div class="receipt-transaction">#${receiptId}</div>
+            </div>
+            
+            <div class="receipt-divider"></div>
+            
+            <div class="receipt-items">
+                <div class="receipt-section-title">ITEMS</div>
+                ${itemsHTML}
+            </div>
+            
+            <div class="receipt-divider"></div>
+            
+            <div class="receipt-totals">
+                <div class="receipt-total-row">
+                    <span>Subtotal:</span>
+                    <span>₱${sale.subtotal.toFixed(2)}</span>
+                </div>
+                ${sale.discount > 0 ? `
+                <div class="receipt-total-row receipt-discount">
+                    <span>Discount (${sale.discountType.toUpperCase()}):</span>
+                    <span>-₱${sale.discount.toFixed(2)}</span>
+                </div>
+                ` : ''}
+                <div class="receipt-total-row receipt-grand-total">
+                    <span>TOTAL:</span>
+                    <span>₱${sale.total.toFixed(2)}</span>
+                </div>
+            </div>
+            
+            <div class="receipt-payment">
+                <div class="receipt-section-title">PAYMENT</div>
+                <div class="receipt-payment-method">
+                    <span>Method:</span>
+                    <span class="payment-method-badge ${sale.paymentMethod}">${sale.paymentMethod.toUpperCase()}</span>
+                </div>
+                ${paymentHTML}
+            </div>
+            
+            <div class="receipt-divider"></div>
+            
+            <div class="receipt-footer" style="margin-top: 5px;">
+                <div class="receipt-thankyou">Thank you for your purchase!</div>
+            </div>
+            
+            <div class="receipt-divider"></div>
+        </div>
+    `;
 }
 
 // UPDATED PROCESS PAYMENT - NO AUTO PRINT
@@ -818,12 +901,12 @@ function processPayment() {
         const sale = addSale(saleData);
         
         if (sale) {
-            // Add to queue
+            // Add to queue (This still uses the queue number)
             addToQueue(sale);
             
             window.lastProcessedSaleData = sale; // Store sale data globally
             
-            // Show receipt FIRST 
+            // Show receipt (which uses the receipt modal style)
             showReceipt(sale);
             
             cart = [];
@@ -958,14 +1041,7 @@ function showReceipt(saleData) {
 
     // ADAPTIVE FONT SIZING FOR BUSINESS NAME
     const shopName = shopInfo.name || '';
-    let shopNameClass = '';
-    if (shopName.length > 25) {
-        shopNameClass = 'extremely-long';
-    } else if (shopName.length > 20) {
-        shopNameClass = 'very-long';
-    } else if (shopName.length > 15) {
-        shopNameClass = 'medium-long';
-    }
+    let shopNameClass = shopName.length > 25 ? 'extremely-long' : (shopName.length > 20 ? 'very-long' : (shopName.length > 15 ? 'medium-long' : '')); 
 
     // ADAPTIVE FONT SIZING FOR FOOTER
     const shopFooter = shopInfo.receiptFooter || '';
@@ -992,13 +1068,11 @@ function showReceipt(saleData) {
 
     receiptContent.innerHTML = `
         <div class="modern-receipt">
-            <!-- Business Header -->
             <div class="receipt-header">
                 <div class="receipt-shop-name ${shopNameClass}">${shopName}</div>
                 ${shopAddress ? `<div class="receipt-address">${shopAddress}</div>` : ''}
             </div>
             
-            <!-- Date & Receipt Info -->
             <div class="receipt-info">
                 <div class="receipt-date">${dateString} ${timeString}</div>
                 <div class="receipt-transaction">#${receiptId}</div>
@@ -1006,7 +1080,6 @@ function showReceipt(saleData) {
             
             <div class="receipt-divider"></div>
             
-            <!-- Items -->
             <div class="receipt-items">
                 <div class="receipt-section-title">ITEMS</div>
                 ${itemsHTML}
@@ -1014,7 +1087,6 @@ function showReceipt(saleData) {
             
             <div class="receipt-divider"></div>
             
-            <!-- Totals -->
             <div class="receipt-totals">
                 <div class="receipt-total-row">
                     <span>Subtotal:</span>
@@ -1032,7 +1104,6 @@ function showReceipt(saleData) {
                 </div>
             </div>
             
-            <!-- Payment -->
             <div class="receipt-payment">
                 <div class="receipt-section-title">PAYMENT</div>
                 <div class="receipt-payment-method">
@@ -1044,19 +1115,16 @@ function showReceipt(saleData) {
             
             <div class="receipt-divider"></div>
             
-            <!-- Footer -->
             <div class="receipt-footer">
                 ${shopFooter ? `<div class="receipt-thankyou ${footerClass}">${shopFooter}</div>` : ''}
                 <div class="receipt-greeting">Thank you!</div>
             </div>
             
-            <!-- Queue Number -->
             <div class="receipt-queue">
                 <div class="queue-number-large">Queue #${lastQueueNumber.toString().padStart(3, '0')}</div>
                 <div class="queue-notice">Please wait for your number</div>
             </div>
             
-            <!-- Notes -->
             ${saleData.notes && saleData.notes.trim() ? `
             <div class="receipt-notes">
                 <strong>NOTES:</strong> ${saleData.notes}
@@ -1066,49 +1134,6 @@ function showReceipt(saleData) {
     `;
     
     document.getElementById('receiptModal').style.display = 'flex';
-}
-
-// Helper function for payment HTML (keep existing)
-function getPaymentHTML(saleData) {
-    const paidAmount = saleData.paymentMethod === 'cash' ? 
-        (saleData.paymentAmounts?.cash || saleData.total) : 
-        (saleData.paymentAmounts?.gcash || saleData.total);
-    
-    if (saleData.paymentMethod === 'multi' && saleData.paymentAmounts) {
-        return `
-            <div class="receipt-payment-methods">
-                <div class="receipt-payment-row">
-                    <span>Cash:</span>
-                    <span>₱${saleData.paymentAmounts.cash.toFixed(2)}</span>
-                </div>
-                <div class="receipt-payment-row">
-                    <span>GCash:</span>
-                    <span>₱${saleData.paymentAmounts.gcash.toFixed(2)}</span>
-                </div>
-                ${(saleData.paymentAmounts.cash + saleData.paymentAmounts.gcash) > saleData.total ? `
-                <div class="receipt-payment-row">
-                    <span>Change:</span>
-                    <span>₱${((saleData.paymentAmounts.cash + saleData.paymentAmounts.gcash) - saleData.total).toFixed(2)}</span>
-                </div>
-                ` : ''}
-            </div>
-        `;
-    } else {
-        return `
-            <div class="receipt-payment-methods">
-                <div class="receipt-payment-row">
-                    <span>${saleData.paymentMethod.toUpperCase()} Paid:</span>
-                    <span>₱${paidAmount.toFixed(2)}</span>
-                </div>
-                ${paidAmount > saleData.total ? `
-                <div class="receipt-payment-row">
-                    <span>Change:</span>
-                    <span>₱${(paidAmount - saleData.total).toFixed(2)}</span>
-                </div>
-                ` : ''}
-            </div>
-        `;
-    }
 }
 
 // Helper function for payment HTML

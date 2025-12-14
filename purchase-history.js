@@ -5,6 +5,7 @@ let currentDate = new Date().toISOString().split('T')[0];
 let currentReceiptContent = ''; 
 let currentReceiptSaleData = null; // NEW: To hold the actual sale object for print
 let pendingVoidId = null;
+let pendingVoidType = null; // NEW: 'return_stock' or 'no_return'
 let confirmCallback = null;
 
 // ESC/POS Commands (Copied from pos.js for self-contained module)
@@ -171,7 +172,7 @@ function handleReceiptClick(saleId) {
         if (sale) {
             const receiptHTML = generateReceiptHTML(sale);
             currentReceiptContent = receiptHTML;
-            currentReceiptSaleData = sale; // NEW: Store the sale data for Bluetooth print
+            currentReceiptSaleData = sale; // NEW: Store the sale data for print
             document.getElementById('receiptModalContent').innerHTML = receiptHTML;
             document.getElementById('receiptModal').style.display = 'flex';
         }
@@ -179,106 +180,7 @@ function handleReceiptClick(saleId) {
 
 function closeReceiptModal() { document.getElementById('receiptModal').style.display = 'none'; }
 
-// NEW FUNCTION: Tries to print using Web Bluetooth API (Copied from pos.js)
-async function bluetoothPrint(rawReceipt) {
-    
-    if (!navigator.bluetooth) {
-        showErrorAlert("Bluetooth Error", "Web Bluetooth API is not supported. Printing via standard dialog.");
-        printReceiptStandardFromModal(); 
-        return;
-    }
-
-    try {
-        // FIX: Remove 'searching' notification delay to avoid confusion
-        showNotification("Bluetooth Print", "Opening printer selection...", 'info', 1000); 
-        
-        // Use generic filters to detect any printer
-        const device = await navigator.bluetooth.requestDevice({
-            acceptAllDevices: true,
-            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', '49535343-fe7d-4ae5-8ae7-9fafd205e455'] 
-        });
-
-        const server = await device.gatt.connect();
-
-        // Use the correct Service UUID (Assuming common thermal printer service)
-        const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb'); 
-        
-        // Use the correct Characteristic UUID for writing data
-        const characteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb'); 
-
-        const encoder = new TextEncoder();
-        const data = encoder.encode(rawReceipt);
-
-        // Send in chunks (important for stability)
-        const CHUNK_SIZE = 512;
-        for (let i = 0; i < data.length; i += CHUNK_SIZE) {
-            const chunk = data.slice(i, i + CHUNK_SIZE);
-            await characteristic.writeValue(chunk);
-        }
-        
-        showNotification("Success", "Print job sent successfully via Bluetooth!", 'success', 3000);
-        
-    } catch (error) {
-        // FIX: Improve error message for user
-        if (error.name === 'NotFoundError') {
-            showErrorAlert("Bluetooth Failed", "No printer selected or found. Paki-pindot ulit ang Print at piliin ang XP-58H.", 'error');
-        } else {
-            showErrorAlert("Bluetooth Print Failed", "Error connecting or sending data. Details: " + error.message, 'error');
-        }
-        console.error("Bluetooth print error:", error);
-        // Fallback to standard print dialog
-        printReceiptStandardFromModal();
-    }
-}
-
-// NEW FUNCTION: Generates simple ESC/POS compatible text (Copied from pos.js)
-function generateRawReceipt(saleData) {
-    const shopName = shopInfo.name || 'POS Shop';
-    const shopAddress = shopInfo.address || '';
-    const shopFooter = shopInfo.receiptFooter || 'Thank you!';
-    // Since this is history, we can't reliably get the queue number. Use Ref ID for barcode/queue placeholder
-    const refNumber = saleData.id || 'N/A';
-    const date = new Date(saleData.timestamp).toLocaleString();
-    const total = saleData.total.toFixed(2);
-
-    let receipt = INIT;
-    
-    // Header
-    receipt += CENTER + BOLD_ON + shopName + BOLD_OFF + LINE_FEED;
-    receipt += CENTER + shopAddress + LINE_FEED;
-    receipt += CENTER + `Ref: #${refNumber}` + LINE_FEED;
-    receipt += CENTER + date + LINE_FEED + LINE_FEED;
-    
-    // Items
-    receipt += LEFT + 'QTY ITEM                        TOTAL' + LINE_FEED;
-    receipt += '--------------------------------' + LINE_FEED;
-
-    saleData.items.forEach(item => {
-        const product = products.find(p => p.id === item.productId);
-        const name = product ? product.name : 'Unknown Product';
-        const itemTotal = (item.price * item.quantity).toFixed(2);
-        const details = item.size ? `(${item.size})` : '';
-        const line = `${item.quantity} ${name} ${details}`;
-        
-        receipt += LEFT + line.padEnd(28, ' ').substring(0, 28) + itemTotal.padStart(4, ' ') + LINE_FEED;
-    });
-
-    // Totals
-    receipt += '--------------------------------' + LINE_FEED;
-    receipt += BOLD_ON + `TOTAL: ${total.padStart(25, ' ')}` + BOLD_ON + LINE_FEED;
-    receipt += '--------------------------------' + LINE_FEED + LINE_FEED;
-
-    // Footer
-    receipt += CENTER + shopFooter + LINE_FEED;
-    receipt += CENTER + 'THANK YOU!' + LINE_FEED + LINE_FEED;
-    
-    // Commands to cut paper
-    receipt += LINE_FEED + LINE_FEED + CUT; 
-
-    return receipt;
-}
-
-// NEW FUNCTION: Button handler for history receipt modal
+// NEW FUNCTION: Button handler for history receipt modal (Standard Print only)
 function printReceiptFromModal() {
     // Falls back to standard print
     printReceiptStandardFromModal();
@@ -312,15 +214,35 @@ function printReceiptStandardFromModal() {
 
 function handleVoidClick(saleId) {
         pendingVoidId = saleId; 
-        if (document.getElementById('customConfirmModal')) {
-            showConfirmModal(
-                'Void Transaction?', 
-                'This will return items to stock and remove this sale record. This action cannot be undone.', 
-                function() { openSecurityModal(); }
-            );
-        } else {
-            if(confirm('Void Transaction?')) openSecurityModal();
-        }
+        
+        // FIX 4: Update Confirmation Modal for two options
+        document.getElementById('confirmTitle').textContent = 'Void Transaction?';
+        document.getElementById('confirmMessage').textContent = 'Choose how to process this transaction. Stock status will be affected by your choice.';
+        
+        const confirmModal = document.getElementById('customConfirmModal');
+        const confirmBtn = document.getElementById('confirmActionBtn');
+        const cancelBtn = document.getElementById('confirmCancelBtn');
+
+        // Set "Yes, Void It" (No Stock Return) logic
+        confirmBtn.textContent = 'Void';
+        confirmBtn.className = 'btn btn-danger';
+        confirmBtn.onclick = function() {
+            pendingVoidType = 'no_return';
+            closeConfirmModal();
+            openSecurityModal();
+        };
+
+        // Set "Wrong Selected Item" (Return Stock) logic
+        cancelBtn.textContent = 'Return';
+        cancelBtn.className = 'btn btn-outline'; // Keep outline style
+        cancelBtn.style.cssText = 'min-width: 100px; background: white; border-color: #3b82f6; color: #3b82f6;'; // Use primary color for clarity
+        cancelBtn.onclick = function() {
+            pendingVoidType = 'return_stock';
+            closeConfirmModal();
+            openSecurityModal();
+        };
+        
+        confirmModal.style.display = 'flex';
     }
 
 function openSecurityModal() {
@@ -340,7 +262,8 @@ function handleVoidSecurityCheck(event) {
         const password = document.getElementById('secPass').value;
         
         let isAuthorized = false;
-        if (email === "ksweets" && password === "sweetadmins123") {
+        // Check hardcoded admin or local storage users
+        if (email === "admin" && password === "admins123") {
             isAuthorized = true;
         } else {
             const storedUsers = JSON.parse(localStorage.getItem('users')) || [];
@@ -352,6 +275,7 @@ function handleVoidSecurityCheck(event) {
             closeSecurityModal();
             
             try {
+                // Fetch latest data from local storage
                 let currentSales = JSON.parse(localStorage.getItem('sales')) || [];
                 let currentProducts = JSON.parse(localStorage.getItem('products')) || [];
                 let currentVoided = JSON.parse(localStorage.getItem('voidedTransactions')) || [];
@@ -360,30 +284,52 @@ function handleVoidSecurityCheck(event) {
                 
                 if (saleIndex !== -1) {
                     const voidedSale = currentSales[saleIndex];
-                    voidedSale.items.forEach(item => {
-                        const product = products.find(p => p.id === item.productId);
-                        if (product) {
-                            if (item.size && product.sizeStocks) {
-                                const currentSizeStock = parseInt(product.sizeStocks[item.size] || 0);
-                                product.sizeStocks[item.size] = currentSizeStock + parseInt(item.quantity);
-                                product.stock = Object.values(product.sizeStocks).reduce((a, b) => parseInt(a) + parseInt(b), 0);
-                            } else {
-                                product.stock = parseInt(product.stock) + parseInt(item.quantity);
+                    
+                    // FIX 2: Apply stock return logic based on pendingVoidType
+                    if (pendingVoidType === 'return_stock') {
+                        voidedSale.items.forEach(item => {
+                            // Find the product in the live 'products' array to update stock correctly
+                            const productToUpdate = currentProducts.find(p => p.id == item.productId);
+                            
+                            if (productToUpdate) {
+                                if (item.size && productToUpdate.sizeStocks && productToUpdate.sizeStocks[item.size] !== undefined) {
+                                    // Handle sized product stock return
+                                    const currentSizeStock = Number(productToUpdate.sizeStocks[item.size] || 0); // Use Number() for safety
+                                    productToUpdate.sizeStocks[item.size] = currentSizeStock + Number(item.quantity);
+                                    // Recalculate total stock
+                                    productToUpdate.stock = Object.values(productToUpdate.sizeStocks).reduce((a, b) => Number(a) + Number(b), 0);
+                                } else {
+                                    // Handle regular product stock return
+                                    productToUpdate.stock = Number(productToUpdate.stock) + Number(item.quantity);
+                                }
                             }
-                        }
+                        });
+                        localStorage.setItem('products', JSON.stringify(currentProducts)); // Save updated products
+                        products = currentProducts; // Update global products array
+                    }
+                    
+                    // FIX 4: Store the correct receipt ID in the voided transaction
+                    currentVoided.push({ 
+                        ...voidedSale, 
+                        id: voidedSale.id, 
+                        receiptNumber: voidedSale.id, 
+                        voidedAt: new Date().toISOString(), 
+                        voidType: pendingVoidType 
                     });
-                    currentVoided.push({ ...voidedSale, voidedAt: new Date().toISOString() });
+                    
                     currentSales.splice(saleIndex, 1);
                     localStorage.setItem('sales', JSON.stringify(currentSales));
-                    localStorage.setItem('products', JSON.stringify(currentProducts));
                     localStorage.setItem('voidedTransactions', JSON.stringify(currentVoided));
-                    sales = currentSales;
-                    products = currentProducts;
+                    
+                    sales = currentSales; // Update global sales array
                     voidedTransactions = currentVoided;
                     
                     loadSalesReport(); 
-                    showNotification('Success', 'Transaction voided successfully!', 'success');
+                    const returnStatus = pendingVoidType === 'return_stock' ? 'and stock returned' : 'but stock remained voided';
+                    showNotification('Success', `Transaction #${pendingVoidId} voided ${returnStatus}!`, 'success');
+                    
                     pendingVoidId = null;
+                    pendingVoidType = null;
                     
                 } else {
                     showErrorAlert('Error', 'Transaction ID not found: ' + pendingVoidId);
@@ -439,35 +385,39 @@ function generateReceiptHTML(sale) {
         }
 
         const realChange = Math.max(0, paidAmount - sale.total);
-
+        
+        // Use inline styles to mimic 58mm thermal receipt design (same as POS.js receipt style)
         return `
-            <div style="font-family: 'Courier New', monospace; font-size: 13px; color: #000; padding: 10px; background: white;">
-                <div style="text-align: center; margin-bottom: 10px; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">
-                    <h3 style="margin: 0; font-size: 16px; font-weight: bold;">${shopName}</h3>
-                    <p style="margin: 2px 0; font-size: 11px; color: #555;">${shopAddress}</p>
-                    <p style="margin: 5px 0 0 0; font-size: 11px;">${saleDate.toLocaleString('en-PH')}</p>
-                    <p style="margin: 0; font-size: 11px;">Ref: #${sale.id}</p>
+            <div class="modern-receipt" style="width: 100%; max-width: 58mm; padding: 10px; box-sizing: border-box;">
+                <div style="font-family: 'Courier New', monospace; font-size: 13px; color: #000;">
+                    <div style="text-align: center; margin-bottom: 5px; border-bottom: 1px solid #000; padding-bottom: 5px;">
+                        <h3 style="margin: 0; font-size: 14px; font-weight: bold; line-height: 1.1;">${shopName}</h3>
+                        <p style="margin: 2px 0; font-size: 11px; color: #555;">${shopAddress}</p>
+                        <p style="margin: 5px 0 0 0; font-size: 11px;">${saleDate.toLocaleString('en-PH')}</p>
+                        <p style="margin: 0; font-size: 11px;">Ref: #${sale.id}</p>
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px;">
+                        ${sale.items.map(item => {
+                            const pName = products.find(p => p.id === item.productId);
+                            if (pName) {
+                                const displayName = item.size ? `${pName.name} (${item.size})` : pName.name;
+                                return `<tr><td style="padding: 2px 0; vertical-align: top; font-size: 12px;">${item.quantity}x</td><td style="padding: 2px 5px; vertical-align: top; font-size: 12px; font-weight: bold;">${displayName}</td><td style="padding: 2px 0; text-align: right; vertical-align: top; font-size: 12px;">₱${(item.price * item.quantity).toFixed(2)}</td></tr>`;
+                            }
+                            return '';
+                        }).join('')}
+                    </table>
+                    
+                    <div style="border-top: 1px solid #000; padding-top: 5px; margin-top: 5px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;"><span>Subtotal:</span> <span>₱${(sale.subtotal || sale.total).toFixed(2)}</span></div>
+                        ${sale.discount > 0 ? `<div style="display: flex; justify-content: space-between; font-size: 12px; color: red;"><span>Discount (${sale.discountType.toUpperCase()}):</span> <span>-₱${sale.discount.toFixed(2)}</span></div>` : ''}
+                        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin: 5px 0; border-top: 2px solid #000; padding-top: 5px;"><span>TOTAL</span><span>₱${sale.total.toFixed(2)}</span></div>
+                        ${paymentHTML}
+                        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-top: 5px; font-weight: bold;"><span>Change:</span><span>₱${realChange.toFixed(2)}</span></div>
+                    </div>
+                    ${sale.notes && sale.notes.trim() ? `<div style="margin-top: 10px; padding: 5px; border-top: 1px dashed #ccc; color: red; font-size: 12px;">NOTES: ${sale.notes}</div>` : ''}
+                    <div style="text-align: center; margin-top: 15px; font-size: 11px; color: #555;"><p>${shopFooter}</p></div>
                 </div>
-                
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
-                    ${sale.items.map(item => {
-                        const pName = products.find(p => p.id === item.productId);
-                        if (pName) {
-                            const displayName = item.size ? `${pName.name} (${item.size})` : pName.name;
-                            return `<tr><td style="padding: 2px 0; vertical-align: top;">${item.quantity}x</td><td style="padding: 2px 5px; vertical-align: top;">${displayName}</td><td style="padding: 2px 0; text-align: right; vertical-align: top;">₱${(item.price * item.quantity).toFixed(2)}</td></tr>`;
-                        }
-                        return '';
-                    }).join('')}
-                </table>
-                
-                <div style="border-top: 1px dashed #ccc; padding-top: 5px; margin-top: 5px;">
-                    <div style="display: flex; justify-content: space-between; font-size: 11px;"><span>Subtotal:</span> <span>₱${(sale.subtotal || sale.total).toFixed(2)}</span></div>
-                    ${sale.discount > 0 ? `<div style="display: flex; justify-content: space-between; font-size: 11px; color: red;"><span>Discount (${sale.discountType.toUpperCase()}):</span> <span>-₱${sale.discount.toFixed(2)}</span></div>` : ''}
-                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin: 5px 0;"><span>TOTAL</span><span>₱${sale.total.toFixed(2)}</span></div>
-                    ${paymentHTML}
-                    <div style="display: flex; justify-content: space-between; font-size: 11px; margin-top: 2px; font-weight: bold;"><span>Change:</span><span>₱${realChange.toFixed(2)}</span></div>
-                </div>
-                <div style="text-align: center; margin-top: 15px; font-size: 11px; color: #555;"><p>${shopFooter}</p></div>
             </div>
         `;
     }
@@ -482,7 +432,15 @@ function downloadReports() {
     );
     const historyTable = generateHistoryTable(report.sales);
     const voidedData = getVoidedTransactionsByDate(date); 
-    const voidedTable = generateVoidedTable(voidedData);
+    
+    // FIX 4: Hiwalayin ang voided data para sa download
+    const returnedItems = voidedData.filter(t => t.voidType === 'return_stock');
+    const voidedNoReturn = voidedData.filter(t => t.voidType === 'no_return');
+
+    // Generate HTML content for both tables
+    const voidedReturnedTable = generateVoidedTableHTML(returnedItems, true, true);
+    const voidedNoReturnTable = generateVoidedTableHTML(voidedNoReturn, false, true);
+
     const shop = JSON.parse(localStorage.getItem('shopInfo')) || {};
     const shopName = shop.name || "Sales Report"; 
     const filterDisplay = isFiltered ? categories.find(c => c.id.toString() === currentCategoryFilter)?.name : 'All Categories';
@@ -500,6 +458,9 @@ function downloadReports() {
                 th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
                 th { background-color: #f2f2f2; font-weight: bold; }
                 .section-title { font-size: 14pt; margin-top: 20px; border-bottom: 2px solid #ccc; padding-bottom: 5px; }
+                .void-section-title { font-size: 12pt; margin-top: 15px; margin-bottom: 5px; }
+                .void-table th { background-color: #fce2e2; }
+                .returned-table th { background-color: #dcfce7; }
             </style>
         </head>
         <body>
@@ -512,7 +473,12 @@ function downloadReports() {
             ${historyTable}
 
             <div class="section-title">Table 2. Voided Transactions</div>
-            ${voidedTable}
+            
+            <h3 class="void-section-title returned-table">Stock Returned</h3>
+            ${voidedReturnedTable || '<p style="margin-left: 20px;">No transactions found in this category.</p>'}
+
+            <h3 class="void-section-title void-table">Voided Stock</h3>
+            ${voidedNoReturnTable || '<p style="margin-left: 20px;">No transactions found in this category.</p>'}
             
             <p style="font-size: 8pt; text-align: center; margin-top: 50px;">
                 --- End of Report ---
@@ -520,21 +486,34 @@ function downloadReports() {
         </body>
         </html>
     `;
-    const blob = new Blob([finalReportHTML], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${shopName.replace(/\s/g, '_')}_Report_${date}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
     
-    showNotification('Download Started', `Report for ${date} downloaded as HTML file.`, 2000);
+    // --- CONVERT TO PDF LOGIC ---
+    // Create a temporary element to host the content for PDF conversion
+    const element = document.createElement('div');
+    element.innerHTML = finalReportHTML; 
+
+    // Configuration for PDF conversion
+    const opt = {
+        margin: [0.5, 0.5, 0.5, 0.5], // Top, Left, Bottom, Right margin in inches
+        filename: `${shopName.replace(/\s/g, '_')}_Report_${date}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, logging: false, dpi: 192, letterRendering: true },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    // Call html2pdf to convert and download
+    // Assuming html2pdf is globally available from the CDN link in HTML
+    if (typeof html2pdf !== 'undefined') {
+        html2pdf().set(opt).from(element).save();
+        showNotification('Download Started', `Report for ${date} downloaded as PDF file.`, 2000);
+    } else {
+         showErrorAlert('Download Error', 'html2pdf library not loaded. Please check internet connection.');
+    }
 }
 
 //History
 function generateHistoryTable(salesData) {
+// ... (No change here)
     if (salesData.length === 0) {
         return '<p style="text-align: center;">No sales history found for this period/filter.</p>';
     }
@@ -585,60 +564,11 @@ function generateHistoryTable(salesData) {
     return tableHTML;
 }
 
-//GenerateVoid
-function generateVoidedTable(voidedData) {
-    if (voidedData.length === 0) {
-        return '<p style="text-align: center;">No voided transactions found for this period.</p>';
-    }
-
-    let tableHTML = `
-        <table>
-            <thead>
-                <tr>
-                    <th>TIME</th>
-                    <th>DATE</th>
-                    <th>ITEMS</th>
-                    <th>TOTAL</th>
-                    <th>PAYMENT</th>
-                    <th>TIME OF BEING VOIDED</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
-
-    voidedData.forEach(transaction => {
-        const saleDate = new Date(transaction.timestamp);
-        const voidDate = new Date(transaction.voidedAt);
-        const dateString = saleDate.toLocaleDateString('en-PH');
-        const timeString = saleDate.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
-        const voidTimeString = voidDate.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
-
-        const itemsString = transaction.items.map(item => {
-            const product = products.find(p => p.id === item.productId);
-            return `${item.quantity}x ${product ? product.name : 'Unknown Product'} (${item.size || 'N/A'})`;
-        }).join('<br>');
-
-        tableHTML += `
-            <tr>
-                <td>${timeString}</td>
-                <td>${dateString}</td>
-                <td>${itemsString}</td>
-                <td>₱${transaction.total.toFixed(2)}</td>
-                <td>${transaction.paymentMethod.toUpperCase()}</td>
-                <td>${voidTimeString}</td>
-            </tr>
-        `;
-    });
-
-    tableHTML += `
-            </tbody>
-        </table>
-    `;
-    return tableHTML;
-}
+//GenerateVoid - REMOVED
 
 //Voided
 function getVoidedTransactionsByDate(date) {
+// ... (No change here)
     const selectedDate = new Date(date);
     const nextDate = new Date(selectedDate);
     nextDate.setDate(nextDate.getDate() + 1);
@@ -651,6 +581,7 @@ function getVoidedTransactionsByDate(date) {
 
 //HELPERS (Retained)
 function showErrorAlert(title, message) { 
+// ... (No change here)
         const modal = document.getElementById('errorAlertModal');
         if(modal) {
             document.getElementById('errorAlertTitle').textContent = title; 
@@ -663,6 +594,7 @@ function showErrorAlert(title, message) {
 function closeErrorAlert() { document.getElementById('errorAlertModal').style.display = 'none'; }
 
 function showConfirmModal(title, message, callback) { 
+// ... (No change here)
         const modal = document.getElementById('customConfirmModal');
         if(modal) {
             document.getElementById('confirmTitle').textContent = title; 
@@ -687,6 +619,7 @@ function closeConfirmModal() {
 
 // Auto Clean
 function autoCleanOldData() {
+// ... (No change here)
         const threeDaysAgo = new Date();
         threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
         sales = sales.filter(sale => new Date(sale.timestamp) >= threeDaysAgo);
@@ -702,32 +635,137 @@ function autoCleanOldData() {
     }
 
 function closeVoidedModal() { document.getElementById('voidedModal').style.display = 'none'; }
-function viewVoidedTransactions() {
-        const voidedList = document.getElementById('voidedTransactionsList');
-        voidedList.innerHTML = '';
-        
-        const date = document.getElementById('reportDate').value || currentDate;
-        const voidedToday = getVoidedTransactionsByDate(date);
 
-        if (voidedToday.length === 0) {
-            voidedList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--secondary);">No voided transactions found.</div>';
-        } else {
-            voidedToday.forEach(transaction => {
-                const voidedItem = document.createElement('div');
-                voidedItem.className = 'transaction-item';
-                voidedItem.style.cssText = "border:1px solid #eee;padding:10px;margin-bottom:10px;border-radius:8px;";
+// FIX 2 & 3: Updated logic to show two separate lists in modal
+function viewVoidedTransactions() {
+    const voidedListContainer = document.getElementById('voidedTransactionsList');
+    const date = document.getElementById('reportDate').value || currentDate;
+    const voidedToday = getVoidedTransactionsByDate(date);
+
+    voidedListContainer.innerHTML = '';
+    
+    if (voidedToday.length === 0) {
+        voidedListContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--secondary);">No voided transactions found for this date.</div>';
+    } else {
+        const returnedItems = voidedToday.filter(t => t.voidType === 'return_stock');
+        const voidedNoReturn = voidedToday.filter(t => t.voidType === 'no_return');
+
+        let allVoidedHTML = '';
+
+        // Generate list for Returned Stock (UI from old request)
+        allVoidedHTML += '<h3 style="margin: 20px 0 10px 0; padding-left: 10px; color: var(--success);">Items Returned to Stock (Return Option)</h3>';
+        if (returnedItems.length > 0) {
+            returnedItems.forEach(transaction => {
                 const voidDate = new Date(transaction.voidedAt);
-                voidedItem.innerHTML = `
-                    <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
-                        <div style="font-size:12px;color:#666;">Voided: ${voidDate.toLocaleString()}</div>
-                        <span class="payment-method-badge payment-${transaction.paymentMethod}">${transaction.paymentMethod.toUpperCase()}</span>
+                const itemsString = transaction.items.map(item => {
+                    const product = products.find(p => p.id === item.productId);
+                    return `(${item.quantity}x) ${product ? product.name : 'Unknown'}`;
+                }).join(', ');
+                
+                allVoidedHTML += `
+                    <div class="transaction-item" style="border: 1px solid var(--success); background: var(--light); margin-bottom: 10px; padding: 10px; border-radius: 6px;">
+                        <div style="font-weight: bold; font-size: 14px; display: flex; justify-content: space-between;">
+                            <span>#${transaction.id}</span> <span>₱${transaction.total.toFixed(2)}</span>
+                        </div>
+                        <div style="font-size: 12px; color: var(--secondary); margin-bottom: 5px;">
+                            Items: ${itemsString}
+                        </div>
+                        <div style="font-size: 10px; color: var(--success);">
+                            VOIDED: ${voidDate.toLocaleTimeString()} (RETURNED)
+                        </div>
                     </div>
-                    <div style="font-weight:bold;border-top:1px solid #eee;padding-top:5px;">Total: ₱${transaction.total.toFixed(2)}</div>
                 `;
             });
+        } else {
+            allVoidedHTML += '<p style="margin-left: 10px; color: var(--secondary);">No transactions returned stock today.</p>';
         }
-        document.getElementById('voidedModal').style.display = 'flex';
+
+
+        // Generate list for Voided Stock (No Return) (UI from old request)
+        allVoidedHTML += '<h3 style="margin: 30px 0 10px 0; padding-left: 10px; color: var(--danger);">Items Voided (Void Option - No Stock Return)</h3>';
+        if (voidedNoReturn.length > 0) {
+            voidedNoReturn.forEach(transaction => {
+                const voidDate = new Date(transaction.voidedAt);
+                const itemsString = transaction.items.map(item => {
+                    const product = products.find(p => p.id === item.productId);
+                    return `(${item.quantity}x) ${product ? product.name : 'Unknown'}`;
+                }).join(', ');
+
+                allVoidedHTML += `
+                    <div class="transaction-item" style="border: 1px solid var(--danger); background: var(--light); margin-bottom: 10px; padding: 10px; border-radius: 6px;">
+                        <div style="font-weight: bold; font-size: 14px; display: flex; justify-content: space-between;">
+                            <span>#${transaction.id}</span> <span>₱${transaction.total.toFixed(2)}</span>
+                        </div>
+                        <div style="font-size: 12px; color: var(--secondary); margin-bottom: 5px;">
+                            Items: ${itemsString}
+                        </div>
+                        <div style="font-size: 10px; color: var(--danger);">
+                            VOIDED: ${voidDate.toLocaleTimeString()} (NO RETURN)
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            allVoidedHTML += '<p style="margin-left: 10px; color: var(--secondary);">No transactions voided stock today.</p>';
+        }
+        
+        voidedListContainer.innerHTML = allVoidedHTML;
     }
+    document.getElementById('voidedModal').style.display = 'flex';
+}
+
+// FIX 3: NEW HELPER: Generates the actual table HTML for voided data (used by Modal and Download)
+function generateVoidedTableHTML(data, isReturned, forDownload = false) {
+    if (data.length === 0) return '';
+    
+    const timeHeader = forDownload ? 'TIME VOIDED' : 'VOID TIME';
+    
+    let tableHTML = `
+        <div class="inventory-table" style="box-shadow: none;">
+        <table class="table" style="min-width: 700px; font-size: 12px; margin-bottom: 20px;">
+            <thead>
+                <tr style="background-color: ${isReturned ? '#dcfce7' : '#fee2e2'};">
+                    <th>RECEIPT #</th>
+                    <th>TIME OF SALE</th>
+                    <th>ITEMS</th>
+                    <th>TOTAL</th>
+                    <th>${timeHeader}</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    data.forEach(transaction => {
+        const saleDate = new Date(transaction.timestamp);
+        const voidDate = new Date(transaction.voidedAt);
+        const saleTime = saleDate.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+        const voidTime = voidDate.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+        
+        const itemsString = transaction.items.map(item => {
+            const product = products.find(p => p.id === item.productId);
+            // Use <br> tag for download, or <span> for modal
+            const separator = forDownload ? '<br>' : '<span style="display: block;">';
+            const closing = forDownload ? '' : '</span>';
+            return `${item.quantity}x ${product ? product.name : 'Unknown'} (${item.size || 'N/A'})`;
+        }).join(forDownload ? '<br>' : '<span style="display: block;">');
+
+        tableHTML += `
+            <tr>
+                <td>#${transaction.id}</td> <td>${saleTime}</td>
+                <td>${itemsString}</td>
+                <td>₱${transaction.total.toFixed(2)}</td>
+                <td>${voidTime}</td>
+            </tr>
+        `;
+    });
+
+    tableHTML += `
+            </tbody>
+        </table>
+        </div>
+    `;
+    return tableHTML;
+}
 
 // Start
 document.addEventListener('DOMContentLoaded', initPurchaseHistory);

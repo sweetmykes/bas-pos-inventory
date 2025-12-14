@@ -142,7 +142,7 @@ function addSale(saleData) {
                 paymentMethod: saleData.paymentMethod || 'cash',
                 paymentAmounts: saleData.paymentAmounts || { cash: 0, gcash: 0 },
                 change: saleData.change || 0,
-                notes: saleData.notes || '' // FIX: Make sure Notes is included
+                notes: saleData.notes || '' 
             };
             
             console.log('Created sale object:', sale);
