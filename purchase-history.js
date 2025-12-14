@@ -682,7 +682,7 @@ function viewVoidedTransactions() {
 
 
         // Generate list for Voided Stock (No Return) (UI from old request)
-        allVoidedHTML += '<h3 style="margin: 30px 0 10px 0; padding-left: 10px; color: var(--danger);">Items Voided (Void Option - No Stock Return)</h3>';
+        allVoidedHTML += '<h3 style="margin: 30px 0 10px 0; padding-left: 10px; color: var(--danger);">Items Voided (No Stock Return)</h3>';
         if (voidedNoReturn.length > 0) {
             voidedNoReturn.forEach(transaction => {
                 const voidDate = new Date(transaction.voidedAt);
